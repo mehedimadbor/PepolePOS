@@ -120,6 +120,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .pw2 table th,.pw2 table td{white-space:normal}
 #inv.lb{width:50mm;max-width:none;margin:0;padding:1mm}
 @media(max-width:900px){.pf{grid-template-columns:1fr}}
+.ck{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px 18px}.ck label{display:flex;gap:8px;align-items:center;margin:0;font-size:13px;color:var(--tx);font-weight:500}.ck input{width:auto}
+#tgc.on{color:var(--ok);border-color:var(--ok)}#tgc.off{color:var(--mu)}
 </style>
 </head>
 <body>
@@ -134,7 +136,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <button class="mi" id="b_cust" onclick="tab('cust')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14a6.5 6.5 0 0 1 3.5 6"/></svg><span>Customers</span></button>
 <button class="mi" id="b_sales" onclick="tab('sales')"><svg viewBox="0 0 24 24"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg><span>Sales &amp; Invoices</span></button>
 <button class="mi" id="b_set" onclick="tab('set')"><svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Settings</span></button></aside>
-<header class="tb"><b id="ttl">Retail POS</b><div class="tr"><span class="chip" id="hs"></span><span id="hd8"></span><button class="s ic" onclick="theme()" title="Light / Dark theme"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button></div></header>
+<header class="tb"><b id="ttl">Retail POS</b><div class="tr"><button class="s off" id="tgc" onclick="tgToggle()" style="padding:4px 12px" title="Telegram sale notifications"></button><span class="chip" id="hs"></span><span id="hd8"></span><button class="s ic" onclick="theme()" title="Light / Dark theme"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button></div></header>
 
 <!-- POS -->
 <div class="pg on" id="t_pos"><div class="card">
@@ -260,10 +262,22 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <label>Invoice footer note</label><input id="s_foot">
     <button style="margin-top:12px" onclick="saveSet()">Save settings</button>
   </div>
+    <div class="card" id="tgcard" style="grid-column:1/-1;order:3"><h2>Telegram notifications</h2>
+    <label style="display:flex;gap:8px;align-items:center;margin:0 0 4px;font-size:13px;color:var(--tx)"><input type="checkbox" id="tg_on" style="width:auto"> Send an instant Telegram message for every sale</label>
+    <div class="row"><div><label>Bot token</label><input id="tg_tok" type="password" autocomplete="off" placeholder="123456789:AA..."></div><div><label>Admin Chat ID(s)</label><input id="tg_chat" autocomplete="off" placeholder="e.g. 123456789 (separate multiple with commas)"></div></div>
+    <div style="color:var(--mu);font-size:12px;margin-top:6px">Create a bot with @BotFather, open the bot and press Start, then enter your numeric Chat ID. For a group, add the bot to the group (group IDs start with a minus sign).</div>
+    <div class="row"><div><label>Notify for</label><select id="tg_for"><option value="A">Retail and Wholesale</option><option value="R">Retail only</option><option value="W">Wholesale only</option></select></div>
+      <div style="display:flex;align-items:flex-end"><label style="display:flex;gap:8px;align-items:center;margin:0 0 8px;font-size:13px;color:var(--tx)"><input type="checkbox" id="tg_due" style="width:auto"> Also notify when a due payment is collected</label></div></div>
+    <h2 style="margin:18px 0 8px">Message content</h2>
+    <div style="color:var(--mu);font-size:12px;margin-bottom:8px">Always included: sale type (Retail / Wholesale), invoice number, total amount and due status.</div>
+    <div class="ck" id="tg_ck"></div>
+    <div class="row" style="margin-top:14px;align-items:flex-start"><div style="flex:1.2"><label style="margin-top:0">Preview (sample data)</label><div id="tg_pv" class="cb" style="white-space:pre-wrap;margin:0;color:var(--tx);font-size:13px"></div></div></div>
+    <div class="row" style="margin-top:12px;align-items:center"><div style="flex:3;color:var(--mu);font-size:12.5px" id="tg_st"></div><button class="s" style="flex:0 0 auto" onclick="tgTest()">Send test message</button><button style="flex:0 0 auto" onclick="saveTG()">Save Telegram settings</button></div>
+  </div>
   <div class="card"><h2>Backup / Restore</h2>
     <div class="sub" style="color:var(--mu);margin-bottom:8px">Data is stored in this browser. Keep a backup copy so you can restore it on another device.</div>
     <textarea id="bk" rows="8" placeholder="Backup data appears here. Paste backup data here to restore."></textarea>
-    <div class="row" style="margin-top:8px"><button class="s" onclick="$('bk').value=JSON.stringify(D);$('bk').select()">Backup banan</button><button onclick="restore()">Restore</button></div>
+    <div class="row" style="margin-top:8px"><button class="s" onclick="$('bk').value=JSON.stringify({...D,tg:{...D.tg,token:'',q:[]}});$('bk').select()">Backup banan</button><button onclick="restore()">Restore</button></div>
   </div>
 </div></div>
 <div class="ov" id="cv" onclick="if(event.target===this)closeCV()"><div class="md" id="cvb"></div></div>
@@ -279,7 +293,7 @@ function theme(){const d=document.documentElement,c=d.dataset.theme||(matchMedia
 const KEY="dx_pro";
 let D={p:[],s:[],h:[],cu:[],dp:[],n:1,c:{shop:"Dealexcart",addr:"Rampura, Dhaka, Bangladesh",web:"www.dealexcart.com",phone:"",email:"",tax:"",vat:0,maxd:30,foot:"Thank you for shopping with us!",cur:"৳",paper:"80"}};
 try{const r=JSON.parse(localStorage.getItem(KEY)||"null");if(r)D={...D,...r,c:{...D.c,...(r.c||{})}}}catch(e){}
-if(!D.dp)D.dp=[];(()=>{let mx=D.p.reduce((a,p)=>Math.max(a,p.no||0),0);D.p.forEach(p=>{if(!p.no)p.no=++mx})})();if(!D.c.addr)D.c.addr="Rampura, Dhaka, Bangladesh";if(!D.c.web)D.c.web="www.dealexcart.com";
+if(!D.dp)D.dp=[];D.tg={on:false,token:"",chat:"",for:"A",due:false,ok:0,err:"",...D.tg,f:{date:true,cust:true,phone:false,items:false,iprice:true,amt:false,disc:false,pay:true,prev:false,note:true,...(D.tg&&D.tg.f)}};if(!Array.isArray(D.tg.q))D.tg.q=[];(()=>{let mx=D.p.reduce((a,p)=>Math.max(a,p.no||0),0);D.p.forEach(p=>{if(!p.no)p.no=++mx})})();if(!D.c.addr)D.c.addr="Rampura, Dhaka, Bangladesh";if(!D.c.web)D.c.web="www.dealexcart.com";
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){toast("Storage is full. Take a backup and remove some images.")}};
 const m=n=>D.c.cur+(+n||0).toLocaleString("en-US",{maximumFractionDigits:2});
 const nf=n=>String(n).padStart(5,"0");
@@ -291,7 +305,7 @@ function tab(t){const w=t==="whs",pg=w?"pos":(t==="dueR"||t==="dueW")?"due":t,nm
  ["dash","pos","prod","cust","due","sales","set"].forEach(x=>$("t_"+x).classList.toggle("on",x===pg));
  ["dash","pos","whs","dueR","dueW","prod","cust","sales","set"].forEach(x=>$("b_"+x).classList.toggle("on",x===t));
  if(t==="dash")rDash();if(pg==="pos"){rPos();$("q").focus()}if(pg==="due"){dueMode=t==="dueW"?"W":"R";dueC=null;$("dq").value="";rDue()}if(t==="prod")showPList();if(t==="cust"){rCust();cuprev()}if(t==="sales")rSales();if(t==="set")rSet()}
-function head(){const s=D.c.shop||"Dealexcart";$("av").textContent=s[0].toUpperCase();$("hs").textContent=s;$("hd8").textContent=new Date().toLocaleDateString("en-GB",{weekday:"short",day:"2-digit",month:"short",year:"numeric"});["sf","s_paper"].forEach(i=>$(i).value=D.c.paper);$("hl").textContent=s;document.title=s+" POS"}
+function head(){const s=D.c.shop||"Dealexcart";$("av").textContent=s[0].toUpperCase();$("hs").textContent=s;$("hd8").textContent=new Date().toLocaleDateString("en-GB",{weekday:"short",day:"2-digit",month:"short",year:"numeric"});["sf","s_paper"].forEach(i=>$(i).value=D.c.paper);$("hl").textContent=s;document.title=s+" POS";tgStatus()}
 
 /* POS */
 let sel=null;const pp=p=>mode==="W"&&p.tp>0?p.tp:(p.ot&&p.spp>0?p.spp:p.p);
@@ -327,7 +341,7 @@ function checkout(){const L=lines();if(!L.length)return toast("Bill is empty");i
  const nm=["Bank","bKash","Cash","Nagad"],pm=T.pays.map((v,i)=>v>0?nm[i]+" "+v:"").filter(Boolean).join(", ")||"Due";
  let ex=T.paid-T.gt;const pay=T.pays.slice();if(ex>0.005)[2,0,1,3].forEach(i=>{const x=Math.min(pay[i],ex);pay[i]-=x;ex-=x});
  const s={no:D.n++,d:Date.now(),w:mode==="W",cn:nm0,ci:cu?cu.id:"",cp:ph,ca:$("ca").value.trim(),m:pm,note:$("nt").value.trim(),it:L.map(l=>({n:l.p.n,b:l.p.b,p:l.pr,c:l.p.cost,q:l.q,g:l.g})),sub:T.sub,disc:T.disc,vat:T.vat,del:T.del,total:T.total,prev:T.prev,gt:T.gt,paid:Math.min(T.paid,T.gt),due:Math.max(0,T.due),pay};
- L.forEach(l=>l.p.st=Math.max(0,l.p.st-l.q-l.g));D.s.unshift(s);save();clearCart();rPos();printInv(s)}
+ L.forEach(l=>l.p.st=Math.max(0,l.p.st-l.q-l.g));D.s.unshift(s);save();tgNotify(s);clearCart();rPos();printInv(s)}
 
 /* Invoice */
 function words(n){n=Math.round(n);if(!n)return"Zero";const a="One Two Three Four Five Six Seven Eight Nine Ten Eleven Twelve Thirteen Fourteen Fifteen Sixteen Seventeen Eighteen Nineteen".split(" "),b="Twenty Thirty Forty Fifty Sixty Seventy Eighty Ninety".split(" "),
@@ -520,7 +534,7 @@ function dueSave(){const w=dueMode==="W",B=dueBills(),tot=sum(B.map(s=>s.due)),p
  if(!B.length)return;if(amt<=0)return toast("Enter the amount received");if(amt>tot+0.005)return toast("Amount cannot exceed the total due ("+m(tot)+")");
  let r=amt;const bl=[];B.forEach(s=>{if(r<=0.0001)return;const x=Math.min(s.due,r);s.due=s.due-x<0.005?0:Math.round((s.due-x)*100)/100;r-=x;bl.push({no:s.no,a:x})});
  const c=D.cu.find(x=>x.p===dueC);D.dp.push({id:"dp"+Date.now(),d:Date.now(),w,cp:dueC,ci:c?c.id:B[0].ci,cn:c?c.n:B[0].cn,amt,pay,note:$("dnt").value.trim(),bl});
- save();toast(m(amt)+" received");rDue()}
+ save();tgNotifyDue(D.dp[D.dp.length-1],sum(D.s.filter(x=>x.cp===dueC&&!!x.w===w).map(x=>x.due)));toast(m(amt)+" received");rDue()}
 function rDueHist(){const w=dueMode==="W",L=D.dp.filter(x=>!!x.w===w).slice(-20).reverse();
  $("dhs").innerHTML=L.length?`<table><tr><th>Date</th><th>Customer</th><th class="r">Amount</th><th>Method</th><th>Note</th></tr>`+L.map(x=>`<tr><td>${dfm(x.d)}</td><td>${esc(x.cn)} <small>(${esc(x.ci||x.cp)})</small></td><td class="r"><b>${m(x.amt)}</b></td><td>${mtxt(x.pay)}</td><td>${esc(x.note)}</td></tr>`).join("")+"</table>":'<div class="em">No due collections yet</div>'}
 
@@ -546,11 +560,63 @@ function rCV(){const c=D.cu.find(x=>x.id===cvId);if(!c)return closeCV();
 <div class="card"><h2>Bills (${SP.length})</h2><div class="wrap">${SP.length?`<table><tr><th>Invoice</th><th>Date</th><th>Type</th><th>Items</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Due</th><th></th></tr>`+SP.map(s=>`<tr><td>${s.w?"WS":"INV"}-${nf(s.no)}</td><td>${dfm(s.d)}</td><td>${s.w?"Wholesale":"Retail"}</td><td style="white-space:normal;min-width:190px">${s.it.map(x=>esc(x.n)+" × "+x.q).join("<br>")}</td><td class="r">${m(s.total)}</td><td class="r">${m(s.paid)}</td><td class="r ${s.due>0.005?"low":""}">${m(s.due)}</td><td><button class="s" onclick="printInv(D.s[${D.s.indexOf(s)}])">Reprint</button></td></tr>`).join("")+"</table>":'<div class="em">No bills in this period</div>'}</div></div>
 ${DPP.length?`<div class="card"><h2>Due payments received</h2><div class="wrap"><table><tr><th>Date</th><th>Type</th><th class="r">Amount</th><th>Method</th></tr>${DPP.map(x=>`<tr><td>${dfm(x.d)}</td><td>${x.w?"Wholesale":"Retail"}</td><td class="r"><b>${m(x.amt)}</b></td><td>${mtxt(x.pay)}</td></tr>`).join("")}</table></div></div>`:""}`}
 
+/* ===== Telegram notifications ===== */
+const TGF=[["date","Date & time"],["cust","Customer name & ID"],["phone","Customer phone"],["items","Product list"],["iprice","  Show quantity, price & amount per product"],["amt","Subtotal, VAT & delivery"],["disc","Discount"],["pay","Payment methods & paid amount"],["prev","Previous due & grand total"],["note","Note"]];
+function tgReady(){const t=D.tg;return !!(t.on&&t.token&&t.chat)}
+function tgMsg(s,F){F=F||D.tg.f;const L=[],no=(s.w?"WS-":"INV-")+nf(s.no),pay=payOf(s),I=s.it||[];
+ L.push(s.w?"📦 <b>WHOLESALE SALE</b>":"🛍 <b>RETAIL SALE</b>");L.push("Invoice: <b>"+no+"</b>");
+ if(F.date)L.push("Date: "+dfm(s.d));
+ if(F.cust)L.push("Customer: "+esc(s.cn||"Walk-in Customer")+(s.ci?" (ID: <b>"+esc(s.ci)+"</b>)":""));
+ else if(s.ci)L.push("Customer ID: <b>"+esc(s.ci)+"</b>");
+ if(F.phone&&s.cp)L.push("Phone: "+esc(s.cp));
+ if(F.items&&I.length){L.push("","<b>Items</b>");I.slice(0,40).forEach((x,i)=>L.push((i+1)+". "+esc(x.n)+" × "+x.q+(F.iprice?" @ "+m(x.p)+" = "+m(x.p*x.q):"")));if(I.length>40)L.push("… and "+(I.length-40)+" more")}
+ L.push("");
+ if(F.amt){L.push("Subtotal: "+m(s.sub));if(s.vat>0)L.push("VAT: "+m(s.vat));if(s.del>0)L.push("Delivery: "+m(s.del))}
+ if(F.disc)L.push("Discount: "+(s.disc>0?"-"+m(s.disc)+(s.sub>0?" ("+Math.round(s.disc/s.sub*1000)/10+"%)":""):"None"));
+ L.push("Total: <b>"+m(s.total)+"</b>");
+ if(F.prev&&s.prev>0)L.push("Previous due: "+m(s.prev),"Grand total: <b>"+m(s.gt)+"</b>");
+ if(F.pay){const pm=PM.map((n,i)=>pay[i]>0?n+" "+m(pay[i]):"").filter(Boolean).join(" · ");L.push("Paid: "+m(s.paid)+(pm?" ("+pm+")":""))}
+ L.push(s.due>0.005?"⚠️ <b>DUE: "+m(s.due)+"</b>":"✅ Paid in full");
+ if(F.note&&s.note)L.push("","Note: "+esc(s.note));
+ return L.join("\n").slice(0,4000)}
+function tgMsgDue(x,rem,F){F=F||D.tg.f;const L=["💰 <b>DUE COLLECTION · "+(x.w?"WHOLESALE":"RETAIL")+"</b>"];
+ if(F.date)L.push("Date: "+dfm(x.d));L.push("Customer: "+esc(x.cn||"")+(x.ci?" (ID: <b>"+esc(x.ci)+"</b>)":""));
+ L.push("Received: <b>"+m(x.amt)+"</b>");
+ if(F.pay){const pm=PM.map((n,i)=>x.pay[i]>0?n+" "+m(x.pay[i]):"").filter(Boolean).join(" · ");if(pm)L.push("Method: "+pm)}
+ L.push(rem>0.005?"⚠️ <b>Remaining due: "+m(rem)+"</b>":"✅ Due cleared");
+ if(F.note&&x.note)L.push("","Note: "+esc(x.note));return L.join("\n")}
+function tgEnqueue(text){const ids=D.tg.chat.split(/[,\s]+/).filter(Boolean);ids.forEach(c=>D.tg.q.push({c,t:text,ts:Date.now()}));if(D.tg.q.length>100)D.tg.q.splice(0,D.tg.q.length-100);save();
+ tgFlush().then(()=>{if(D.tg.err&&D.tg.q.length)toast("Telegram: "+D.tg.err)})}
+function tgNotify(s){if(!tgReady())return;if((D.tg.for==="R"&&s.w)||(D.tg.for==="W"&&!s.w))return;tgEnqueue(tgMsg(s))}
+function tgNotifyDue(x,rem){if(!tgReady()||!D.tg.due)return;if((D.tg.for==="R"&&x.w)||(D.tg.for==="W"&&!x.w))return;tgEnqueue(tgMsgDue(x,rem))}
+async function tgPost(token,chat,text){const r=await fetch("https://api.telegram.org/bot"+token+"/sendMessage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:chat,text,parse_mode:"HTML",disable_web_page_preview:true})});return r.json()}
+let tgBusy=false;
+async function tgFlush(){if(tgBusy||!tgReady())return;tgBusy=true;
+ try{const q=D.tg.q;while(q.length){let j;try{j=await tgPost(D.tg.token,q[0].c,q[0].t)}catch(e){D.tg.err="No connection, will retry automatically";break}
+  if(j.ok){q.shift();D.tg.ok=Date.now();D.tg.err=""}else if(j.error_code===429){D.tg.err="Rate limited, will retry";break}else{q.shift();D.tg.err=j.description||"Message rejected by Telegram";toast("Telegram: "+D.tg.err)}}}
+ finally{tgBusy=false;save();tgStatus()}}
+function tgStatus(){const t=D.tg,b=$("tgc");if(!b)return;const cfg=t.token&&t.chat;b.textContent="Telegram: "+(!cfg?"Not set up":t.on?"On":"Off");b.className="s "+(cfg&&t.on?"on":"off");
+ const s=$("tg_st");if(s)s.textContent=[t.q.length?t.q.length+" message(s) waiting to send":"",t.ok?"Last sent: "+dfm(t.ok):"",t.err?"Last issue: "+t.err:""].filter(Boolean).join(" · ")}
+function tgToggle(){const t=D.tg;if(!t.token||!t.chat){tab("set");toast("Set up the Telegram bot token and Chat ID first");return}
+ t.on=!t.on;if(!t.on)t.q=[];save();tgStatus();if($("tg_on"))$("tg_on").checked=t.on;toast("Telegram notifications "+(t.on?"enabled":"disabled"));if(t.on)tgFlush()}
+function tgForm(){const F={};TGF.forEach(([k])=>F[k]=$("tgf_"+k).checked);return F}
+function tgLoad(){$("tg_ck").innerHTML=TGF.map(([k,l])=>`<label><input type="checkbox" id="tgf_${k}" onchange="tgPrev()"> ${l.trim()}</label>`).join("");
+ TGF.forEach(([k])=>$("tgf_"+k).checked=!!D.tg.f[k]);$("tg_on").checked=D.tg.on;$("tg_tok").value=D.tg.token;$("tg_chat").value=D.tg.chat;$("tg_for").value=D.tg.for;$("tg_due").checked=D.tg.due;tgPrev();tgStatus()}
+function tgPrev(){const s={no:12,d:Date.now(),w:false,cn:"Sample Customer",ci:"SAM-1234",cp:"01700000000",it:[{n:"Product A",p:500,q:2},{n:"Product B",p:250,q:1}],sub:1250,disc:50,vat:0,del:0,total:1200,prev:0,gt:1200,paid:1000,due:200,pay:[0,0,700,300],note:"Deliver tomorrow"};
+ $("tg_pv").innerHTML=tgMsg(s,tgForm())}
+function tgVal(){const tok=$("tg_tok").value.trim(),chat=$("tg_chat").value.trim();if(!/^\d+:[\w-]+$/.test(tok)){toast("Invalid bot token format");return null}if(!chat||!/^[-\d,\s@\w]+$/.test(chat)){toast("Enter a valid Chat ID");return null}return{tok,chat}}
+function saveTG(){const on=$("tg_on").checked,tok=$("tg_tok").value.trim(),chat=$("tg_chat").value.trim();
+ if(on||tok||chat){const v=tgVal();if(!v)return}
+ const t=D.tg;t.on=on;t.token=tok;t.chat=chat;t.for=$("tg_for").value;t.due=$("tg_due").checked;t.f=tgForm();if(!on)t.q=[];save();tgStatus();toast("Telegram settings saved");if(on)tgFlush()}
+async function tgTest(){const v=tgVal();if(!v)return;const ids=v.chat.split(/[,\s]+/).filter(Boolean);toast("Sending test message...");
+ try{for(const c of ids){const j=await tgPost(v.tok,c,"✅ <b>Test message</b>\n"+esc(D.c.shop||"Dealexcart")+" POS is connected to Telegram.");if(!j.ok)return toast("Telegram: "+(j.description||"Failed to send"))}toast("Test message sent")}catch(e){toast("Could not reach Telegram. Check your internet connection.")}}
+setInterval(()=>{if(D.tg.q.length)tgFlush()},60000);addEventListener("online",()=>tgFlush());
+
 /* Settings */
 const sf={shop:"s_shop",addr:"s_addr",web:"s_web",phone:"s_phone",email:"s_email",tax:"s_tax",vat:"s_vat",maxd:"s_maxd",cur:"s_cur",paper:"s_paper",foot:"s_foot"};
-function rSet(){for(const k in sf)$(sf[k]).value=D.c[k]}
+function rSet(){for(const k in sf)$(sf[k]).value=D.c[k];tgLoad()}
 function saveSet(){for(const k in sf)D.c[k]=$(sf[k]).value;D.c.vat=parseFloat(D.c.vat)||0;D.c.maxd=isNaN(parseFloat(D.c.maxd))?30:parseFloat(D.c.maxd);D.c.cur=D.c.cur||"৳";save();head();toast("Settings saved")}
-function restore(){try{const r=JSON.parse($("bk").value);if(!r.p||!r.s)throw 0;D={...D,...r,c:{...D.c,...r.c}};save();rSet();rPos();toast("Restore complete")}catch(e){toast("Invalid backup data")}}
+function restore(){try{const r=JSON.parse($("bk").value);if(!r.p||!r.s)throw 0;D={...D,...r,c:{...D.c,...r.c},tg:{...D.tg,...(r.tg||{}),f:{...D.tg.f,...((r.tg||{}).f||{})},token:D.tg.token,q:[]}};save();rSet();rPos();toast("Restore complete")}catch(e){toast("Invalid backup data")}}
 rPos();$("q").focus();
 </script>
 </body>
