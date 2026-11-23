@@ -297,6 +297,7 @@ if(!D.dp)D.dp=[];D.tg={on:false,token:"",chat:"",for:"A",due:false,ok:0,err:"",.
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){toast("Storage is full. Take a backup and remove some images.")}};
 const m=n=>D.c.cur+(+n||0).toLocaleString("en-US",{maximumFractionDigits:2});
 const nf=n=>String(n).padStart(5,"0");
+const R2=n=>Math.round(((+n||0)+Number.EPSILON)*100)/100;
 let cart=[],mode="R";
 function toast(t){const e=$("ts");e.textContent=t;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display="none",2200)}
 function tab(t){const w=t==="whs",pg=w?"pos":(t==="dueR"||t==="dueW")?"due":t,nm=w?"W":"R";
@@ -309,7 +310,7 @@ function head(){const s=D.c.shop||"Dealexcart";$("av").textContent=s[0].toUpperC
 
 /* POS */
 let sel=null;const pp=p=>mode==="W"&&p.tp>0?p.tp:(p.ot&&p.spp>0?p.spp:p.p);
-const f=n=>(Math.round((+n||0)*100)/100).toFixed(2);
+const f=n=>R2(n).toFixed(2);
 function find(q){q=q.trim().toLowerCase();return q?D.p.filter(p=>p.act!==false&&(p.n+" "+p.b+" "+p.c).toLowerCase().includes(q)):[]}
 function sug(){sel=null;const r=find($("q").value).slice(0,8);$("sg").innerHTML=r.map(p=>`<div onclick="pick('${p.id}')"><span>${esc(p.n)} <small>${esc(p.b)}</small></span><b>${m(pp(p))} <small>· stock ${p.st}</small></b></div>`).join("");$("sg").style.display=r.length?"block":"none"}
 function pick(id){const p=D.p.find(x=>x.id===id);sel=id;$("q").value=p.n;$("sg").style.display="none";$("aq").focus();$("aq").select()}
@@ -322,25 +323,27 @@ function rPos(){head();$("mx").textContent="Max "+D.c.maxd+"%";if($("vp").value=
 function lines(){return cart.map(l=>({p:D.p.find(x=>x.id===l.id),q:l.q,g:l.g,r:l.r})).filter(l=>l.p).map(l=>({...l,pr:l.r>0?l.r:pp(l.p)}))}
 function setR(i,v){cart[i].r=parseFloat(v)||0;rCart()}
 function rCart(){const L=lines();$("cl").innerHTML=L.length?L.map((l,i)=>`<tr><td>${i+1}</td><td>${esc(l.p.n)}<br><small style="color:var(--mu)">${esc(l.p.b)}</small></td><td>${l.p.st}</td><td>${mode==="W"?`<input class="q" style="width:92px${l.pr<l.p.cost?";border-color:var(--dg)":""}" type="number" min="0" value="${l.pr}" onchange="setR(${i},this.value)">`:m(l.pr)}</td><td><input class="q" type="number" min="1" value="${l.q}" onchange="setQ(${i},'q',this.value)"></td><td>${m(l.pr*l.q)}</td><td><button class="x" onclick="cart.splice(${i},1);rCart()">×</button></td></tr>`).join(""):'<tr><td colspan="7" class="em">Bill is empty. Scan a barcode or search for a product.</td></tr>';calc()}
-function setQ(i,k,v){cart[i][k]=Math.max(k==="q"?1:0,parseInt(v)||0);rCart()}
-function prevDue(){const p=$("cp").value.trim();return p?D.s.filter(s=>s.cp===p&&!!s.w===(mode==="W")).reduce((a,s)=>a+s.due,0):0}
-function calc(){const L=lines(),sub=L.reduce((a,l)=>a+l.pr*l.q,0),qs=L.reduce((a,l)=>a+l.q,0),pct=$("dp").checked;
- let dv=parseFloat($("dv").value)||0;if(pct&&dv>D.c.maxd){dv=D.c.maxd;$("dv").value=dv;toast("Max discount "+D.c.maxd+"%")}
- const disc=Math.min(sub,pct?sub*dv/100:dv),vat=(sub-disc)*(parseFloat($("vp").value)||0)/100,del=parseFloat($("dl").value)||0,total=sub-disc+vat+del,
- prev=prevDue(),gt=total+prev,pays=["pb1","pb2","pb3","pb4"].map(i=>parseFloat($(i).value)||0),paid=pays.reduce((a,b)=>a+b,0),due=gt-paid;
+function setQ(i,k,v){const l=cart[i],n=Math.max(k==="q"?1:0,parseInt(v)||0),p=D.p.find(x=>x.id===l.id);if(k==="q"&&p&&n>l.q&&n+(l.g||0)>p.st&&!confirm("Only "+p.st+" in stock. Add anyway?")){rCart();return}l[k]=n;rCart()}
+function prevDue(){const p=$("cp").value.trim();return p?R2(D.s.filter(s=>sameP(s.cp,p)&&!!s.w===(mode==="W")).reduce((a,s)=>a+s.due,0)):0}
+function calc(){const L=lines(),sub=R2(L.reduce((a,l)=>a+R2(l.pr*l.q),0)),qs=L.reduce((a,l)=>a+l.q,0),pct=$("dp").checked;
+ let dv=Math.max(0,parseFloat($("dv").value)||0);
+ if(pct&&dv>D.c.maxd){dv=D.c.maxd;$("dv").value=dv;toast("Max discount "+D.c.maxd+"%")}
+ if(!pct&&sub>0){const cap=R2(sub*D.c.maxd/100);if(dv>cap){dv=cap;toast("Max discount "+D.c.maxd+"% ("+m(cap)+")")}}
+ const disc=R2(Math.min(sub,pct?sub*dv/100:dv)),vp=Math.min(100,Math.max(0,parseFloat($("vp").value)||0)),vat=R2((sub-disc)*vp/100),del=R2(Math.max(0,parseFloat($("dl").value)||0)),total=R2(sub-disc+vat+del),
+ prev=prevDue(),gt=R2(total+prev),pays=["pb1","pb2","pb3","pb4"].map(i=>Math.max(0,parseFloat($(i).value)||0)),paid=R2(pays.reduce((a,b)=>a+b,0)),due=R2(gt-paid);
  $("sq").value=qs;$("st").value=f(sub);$("tdi").value=f(disc);$("tv").value=f(vat);$("gt").value=f(total);$("pv").value=f(prev);$("gg").value=f(gt);$("pa").value=f(paid);$("du").value=f(due);
- return{sub,disc,vat,del,total,prev,gt,paid,due,pays}}
-function fullCash(){const o=(parseFloat($("pb1").value)||0)+(parseFloat($("pb2").value)||0)+(parseFloat($("pb4").value)||0);$("pb3").value=f(Math.max(0,calc().gt-o));calc()}
-function fillC(){const p=$("cp").value.trim(),c=D.cu.find(x=>x.p===p);if(c){if(!$("cn").value)$("cn").value=c.n;if(!$("ca").value)$("ca").value=c.a}cinfo();calc();const v=prevDue();if(v>0)toast("Previous due: "+m(v))}
+ return{sub,disc,vat,vp,del,total,prev,gt,paid,due,pays}}
+function fullCash(){const o=["pb1","pb2","pb4"].reduce((a,i)=>a+Math.max(0,parseFloat($(i).value)||0),0);$("pb3").value=f(Math.max(0,calc().gt-o));calc()}
+function fillC(){const p=$("cp").value.trim(),c=D.cu.find(x=>p&&pn(x.p)===pn(p));if(c){if(!$("cn").value)$("cn").value=c.n;if(!$("ca").value)$("ca").value=c.a}cinfo();calc();const v=prevDue();if(v>0)toast("Previous due: "+m(v))}
 function clearCart(ask){if(ask&&cart.length&&!confirm("Clear the current bill?"))return;cart=[];["cs","cn","cp","ca","nt","pb1","pb2","pb3","pb4","dv"].forEach(i=>$(i).value="");$("dl").value=0;$("df").checked=true;$("vp").value=D.c.vat||"";cinfo();rCart()}
 function checkout(){const L=lines();if(!L.length)return toast("Bill is empty");if(mode==="W"&&(!$("cn").value.trim()||!$("cp").value.trim()))return toast("Customer name and phone are required for wholesale bills");const T=calc();
  if(T.paid>T.gt+0.005&&!confirm("Paid amount exceeds the Grand Total. Continue?"))return;
- const ph=$("cp").value.trim(),nm0=$("cn").value.trim();if(T.due>0.005&&(!nm0||!ph))return toast("Customer name and phone are required when the bill has a due amount");let cu=null;
- if(nm0&&ph){const ad=$("ca").value.trim();cu=D.cu.find(x=>x.p===ph);if(cu){cu.n=nm0;if(ad)cu.a=ad}else{cu={id:cid(nm0,ph),n:nm0,p:ph,a:ad,t:Date.now()};D.cu.push(cu)}}
- if(ph)D.s.forEach(x=>{if(x.cp===ph&&!!x.w===(mode==="W"))x.due=0});
+ let ph=$("cp").value.trim();const nm0=$("cn").value.trim();if(T.due>0.005&&(!nm0||!ph))return toast("Customer name and phone are required when the bill has a due amount");let cu=null;
+ if(nm0&&ph){const ad=$("ca").value.trim();cu=D.cu.find(x=>sameP(x.p,ph));if(cu){cu.n=nm0;if(ad)cu.a=ad;ph=cu.p}else{cu={id:cid(nm0,ph),n:nm0,p:ph,a:ad,t:Date.now()};D.cu.push(cu)}}
+ const clr=[];if(ph)D.s.forEach(x=>{if(sameP(x.cp,ph)&&!!x.w===(mode==="W")){if(x.due>0.005)clr.push({no:x.no,w:!!x.w,due:x.due});x.due=0}});
  const nm=["Bank","bKash","Cash","Nagad"],pm=T.pays.map((v,i)=>v>0?nm[i]+" "+v:"").filter(Boolean).join(", ")||"Due";
  let ex=T.paid-T.gt;const pay=T.pays.slice();if(ex>0.005)[2,0,1,3].forEach(i=>{const x=Math.min(pay[i],ex);pay[i]-=x;ex-=x});
- const s={no:D.n++,d:Date.now(),w:mode==="W",cn:nm0,ci:cu?cu.id:"",cp:ph,ca:$("ca").value.trim(),m:pm,note:$("nt").value.trim(),it:L.map(l=>({n:l.p.n,b:l.p.b,p:l.pr,c:l.p.cost,q:l.q,g:l.g})),sub:T.sub,disc:T.disc,vat:T.vat,del:T.del,total:T.total,prev:T.prev,gt:T.gt,paid:Math.min(T.paid,T.gt),due:Math.max(0,T.due),pay};
+ const s={no:D.n++,d:Date.now(),w:mode==="W",cn:nm0,ci:cu?cu.id:"",cp:ph,ca:$("ca").value.trim(),m:pay.map((v,i)=>v>0?nm[i]+" "+R2(v):"").filter(Boolean).join(", ")||"Due",note:$("nt").value.trim(),it:L.map(l=>({n:l.p.n,b:l.p.b,p:l.pr,c:l.p.cost,q:l.q,g:l.g})),sub:T.sub,disc:T.disc,vat:T.vat,del:T.del,total:T.total,prev:T.prev,gt:T.gt,paid:Math.min(T.paid,T.gt),due:Math.max(0,T.due),pay:pay.map(R2),vp:T.vp,clr,due0:Math.max(0,T.due)};
  L.forEach(l=>l.p.st=Math.max(0,l.p.st-l.q-l.g));D.s.unshift(s);save();tgNotify(s);clearCart();rPos();printInv(s)}
 
 /* Invoice */
@@ -356,7 +359,7 @@ function rcpt(s,c,dt,no,paid){const kv=(a,b,k)=>`<div class="kv${k?" b":""}"><sp
 ${s.w?`<div class="c b big">WHOLESALE INVOICE</div>`:""}${kv("Invoice",no)}${kv("Date",dt)}<hr class="dd">
 <div class="cu">${esc(s.cn||"Walk-in Customer")}</div>${s.ci?`<div>ID: ${esc(s.ci)}</div>`:""}${s.cp?`<div class="cu">${esc(s.cp)}</div>`:""}${s.ca?`<div class="b">${esc(s.ca)}</div>`:""}<hr class="dd">
 ${s.it.map(x=>`<div>${esc(x.n)}</div>${kv(x.q+" x "+m(x.p),m(x.p*x.q))}${x.g?`<div>+ ${x.g} gift</div>`:""}`).join("")}<hr class="dd">
-${kv("Subtotal",m(s.sub))}${s.disc?kv("Discount","-"+m(s.disc)):""}${s.vat?kv("VAT ("+c.vat+"%)",m(s.vat)):""}${s.del?kv("Delivery",m(s.del)):""}
+${kv("Subtotal",m(s.sub))}${s.disc?kv("Discount","-"+m(s.disc)):""}${s.vat?kv("VAT ("+(s.vp??c.vat)+"%)",m(s.vat)):""}${s.del?kv("Delivery",m(s.del)):""}
 <div class="kv big"><span>TOTAL</span><span>${m(s.total)}</span></div>${s.prev?kv("Previous Due",m(s.prev))+kv("Grand Total",m(s.gt),1):""}${kv("Paid",m(s.paid))}${kv("Due",m(s.due),1)}
 <hr class="dd"><div class="c">Payment: ${esc(s.m)}</div><div class="c b">${paid?"*** PAID ***":"*** DUE ***"}</div><hr class="dd"><div class="c">${esc(c.foot)}</div>`}
 function a4(s,c,dt,no,paid){const gt=s.gt??s.total;
@@ -364,7 +367,7 @@ function a4(s,c,dt,no,paid){const gt=s.gt??s.total;
 <div class="ib"><div class="tag" style="${s.w?"font-size:17px;letter-spacing:2px":""}">${s.w?"WHOLESALE INVOICE":"INVOICE"}</div><table><tr><td>Invoice No</td><td>${no}</td></tr><tr><td>Date</td><td>${dt}</td></tr><tr><td>Payment</td><td>${esc(s.m)}</td></tr></table></div></div>
 <div class="bt"><div class="cd"><div class="bl">BILL TO${s.ci?" · ID "+esc(s.ci):""}</div><div class="cnm">${esc(s.cn||"Walk-in Customer")}</div>${s.cp?`<div class="cph">Phone: ${esc(s.cp)}</div>`:""}${s.ca?`<div class="cad">Address: ${esc(s.ca)}</div>`:""}</div><div class="stb"><div class="bl">STATUS</div><div class="st" style="color:${paid?"#15803d":"#b91c1c"}">${paid?"PAID":"DUE"}</div></div></div>
 <table><tr><th>#</th><th>Item Description</th><th class="r">Price</th><th class="r">Qty</th><th class="r">Amount</th></tr>${s.it.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.n)}${x.b?`<br><small style="color:#64748b">${esc(x.b)}</small>`:""}</td><td class="r">${m(x.p)}</td><td class="r">${x.q}${x.g?` +${x.g} gift`:""}</td><td class="r">${m(x.p*x.q)}</td></tr>`).join("")}</table>
-<div class="sum"><div class="wd"><b>AMOUNT IN WORDS</b>Taka ${words(gt)} Only${s.note?`<br><br><b>NOTE</b>${esc(s.note)}`:""}</div><div class="tt">${s.w?`<div><span>Total Qty</span><span>${s.it.reduce((a,x)=>a+x.q+(x.g||0),0)}</span></div>`:""}<div><span>Subtotal</span><span>${m(s.sub)}</span></div>${s.disc?`<div><span>Discount</span><span>-${m(s.disc)}</span></div>`:""}${s.vat?`<div><span>VAT (${D.c.vat}%)</span><span>${m(s.vat)}</span></div>`:""}<div><span>Delivery Charge</span><span>${m(s.del)}</span></div><div class="g"><span>Total</span><span>${m(s.total)}</span></div>${s.prev?`<div><span>Previous Due</span><span>${m(s.prev)}</span></div><div><b>Grand Total</b><b>${m(s.gt)}</b></div>`:""}<div><span>Paid</span><span>${m(s.paid)}</span></div><div><span>Due</span><b>${m(s.due)}</b></div></div></div>
+<div class="sum"><div class="wd"><b>AMOUNT IN WORDS</b>Taka ${words(gt)} Only${s.note?`<br><br><b>NOTE</b>${esc(s.note)}`:""}</div><div class="tt">${s.w?`<div><span>Total Qty</span><span>${s.it.reduce((a,x)=>a+x.q+(x.g||0),0)}</span></div>`:""}<div><span>Subtotal</span><span>${m(s.sub)}</span></div>${s.disc?`<div><span>Discount</span><span>-${m(s.disc)}</span></div>`:""}${s.vat?`<div><span>VAT (${s.vp??D.c.vat}%)</span><span>${m(s.vat)}</span></div>`:""}<div><span>Delivery Charge</span><span>${m(s.del)}</span></div><div class="g"><span>Total</span><span>${m(s.total)}</span></div>${s.prev?`<div><span>Previous Due</span><span>${m(s.prev)}</span></div><div><b>Grand Total</b><b>${m(s.gt)}</b></div>`:""}<div><span>Paid</span><span>${m(s.paid)}</span></div><div><span>Due</span><b>${m(s.due)}</b></div></div></div>
 <div class="sg"><div>Customer Signature</div><div>Authorized Signature</div></div><div class="ft">${esc(c.foot)}${c.web?" · "+esc(c.web):""}</div>`}
 
 /* Products */
@@ -391,6 +394,7 @@ function openP(id){resetP();
  $("pv_list").style.display="none";$("pv_form").style.display="block";scrollTo(0,0)}
 function showPList(){$("pv_form").style.display="none";$("pv_list").style.display="block";rProd()}
 function saveP(){const n=$("pn").value.trim(),pr=parseFloat($("ppr").value),b=$("pb").value.trim();if(!n||isNaN(pr))return toast("Enter the product name and M.R.P.");
+ if(pr<0||nv("pcost")<0||nv("pst")<0||nv("plow")<0||["ptpp","psppp","pdppp","pswpp"].some(k=>nv(k)<0))return toast("Price, cost, percentage and stock cannot be negative");
  const id=$("pid").value;if(b&&D.p.some(x=>x.b===b&&x.id!==id))return toast("This barcode already exists");fcalc();
  const o={n,b,c:$("pc").value.trim(),br:$("pbr").value.trim(),u:$("pu").value,uv:$("puv").value.trim(),ot:$("pot").value,act:$("pact").value==="1",cost:nv("pcost"),p:pr,tpp:nv("ptpp"),tp:nv("ptp"),sppp:nv("psppp"),spp:nv("pspp"),dppp:nv("pdppp"),dpp:nv("pdpp"),swpp:nv("pswpp"),swp:nv("pswp"),st:parseInt($("pst").value)||0,low:parseInt($("plow").value)||0,img:curImg,gal:curGal.filter(g=>g.s)};
  if(id)Object.assign(D.p.find(x=>x.id===id),o);else D.p.push({id:"p"+Date.now()+Math.floor(Math.random()*999),no:nextNo(),...o});
@@ -442,27 +446,32 @@ function imp(rows){rows=rows.filter(r=>r.length);if(rows.length&&isNaN(parseFloa
 /* Customers */
 const mk3=n=>[...String(n).replace(/[^\p{L}]/gu,"")].slice(0,3).join("").toUpperCase().padEnd(3,"X");
 function cid(n,p){const d=String(p).replace(/\D/g,"").slice(-4).padStart(4,"0"),b=mk3(n)+"-"+d;let id=b,i=2;while(D.cu.some(c=>c.id===id&&c.p!==p))id=b+"-"+i++;return id}
-function csearch(q){q=q.trim().toLowerCase().replace(/-/g,"");return q?D.cu.filter(c=>(c.n+" "+c.p+" "+c.id).toLowerCase().replace(/-/g,"").includes(q)):[]}
+const nd=s=>String(s??"").replace(/[\u09E6-\u09EF]/g,d=>d.charCodeAt(0)-0x09E6);
+const pn=s=>{let d=nd(s).replace(/\D/g,"");if(d.startsWith("880"))d=d.slice(3);return d.replace(/^0+/,"")};
+function cmatch(q,n,p,id){q=nd(q).trim().toLowerCase();if(!q)return false;const t=(String(n??"")+String(id??"")).toLowerCase().replace(/[\s-]/g,""),k=q.replace(/[\s-]/g,"");if(t.includes(k)||String(p??"").replace(/[\s-]/g,"").includes(k))return true;if(/^[\d\s+\-()]+$/.test(q)){const a=pn(q);return !!a&&pn(p).includes(a)}return false}
+const sameP=(a,b)=>{const x=pn(a);return !!x&&x===pn(b)};
+function csearch(q){return D.cu.filter(c=>cmatch(q,c.n,c.p,c.id))}
 function csug(){const r=csearch($("cs").value).slice(0,8);$("csg").innerHTML=r.map(c=>`<div onclick="cpick('${c.id}')"><span>${esc(c.n)} <small>${esc(c.p)}</small></span><b>${esc(c.id)}</b></div>`).join("");$("csg").style.display=r.length?"block":"none"}
 function cpick(id){const c=D.cu.find(x=>x.id===id);if(!c)return;$("cn").value=c.n;$("cp").value=c.p;$("ca").value=c.a;$("cs").value="";$("csg").style.display="none";cinfo();calc();const v=prevDue();if(v>0)toast("Previous due: "+m(v))}
-function cinfo(){const n=$("cn").value.trim(),p=$("cp").value.trim(),c=D.cu.find(x=>p&&x.p===p);$("cb").innerHTML=!n?"<b>Walk-in Customer</b> (leave the name empty for a walk-in bill)":c?`Customer ID: <b>${esc(c.id)}</b> · saved customer <button class="s" style="padding:2px 12px;margin-left:8px" onclick="viewC('${c.id}')">View</button>`:p?`<b>New customer</b> · ID after saving: <b>${esc(cid(n,p))}</b>`:"Enter a phone number to save this customer"}
+function cinfo(){const n=$("cn").value.trim(),p=$("cp").value.trim(),c=D.cu.find(x=>p&&pn(x.p)===pn(p));$("cb").innerHTML=!n?"<b>Walk-in Customer</b> (leave the name empty for a walk-in bill)":c?`Customer ID: <b>${esc(c.id)}</b> · saved customer <button class="s" style="padding:2px 12px;margin-left:8px" onclick="viewC('${c.id}')">View</button>`:p?`<b>New customer</b> · ID after saving: <b>${esc(cid(n,p))}</b>`:"Enter a phone number to save this customer"}
 function cuprev(){const n=$("cun").value.trim(),p=$("cup").value.trim(),o=$("cuid").value;$("cprev").innerHTML=o?`Customer ID: <b>${esc(o)}</b>`:n&&p?`Customer ID: <b>${esc(cid(n,p))}</b>`:"ID = first 3 letters of name + last 4 digits of phone"}
 function resetC(){["cuid","cun","cup","cua"].forEach(i=>$(i).value="");$("cft").textContent="New customer";cuprev()}
 function saveC(){const n=$("cun").value.trim(),p=$("cup").value.trim(),a=$("cua").value.trim(),o=$("cuid").value;if(!n||!p)return toast("Enter name and phone");
- const d=D.cu.find(x=>x.p===p&&x.id!==o);if(d)return toast("A customer with this phone already exists: "+d.id);
+ const d=D.cu.find(x=>sameP(x.p,p)&&x.id!==o);if(d)return toast("A customer with this phone already exists: "+d.id);
  if(o)Object.assign(D.cu.find(x=>x.id===o),{n,p,a});else D.cu.push({id:cid(n,p),n,p,a,t:Date.now()});save();resetC();rCust();toast("Customer saved")}
 function editC(id){const c=D.cu.find(x=>x.id===id);$("cuid").value=id;$("cun").value=c.n;$("cup").value=c.p;$("cua").value=c.a;$("cft").textContent="Edit customer";cuprev();scrollTo(0,0)}
 function delC(id){if(confirm("Delete this customer? Previous invoices will be kept."))D.cu=D.cu.filter(x=>x.id!==id);save();rCust()}
 function rCust(){const L=$("cq").value.trim()?csearch($("cq").value):D.cu;
- $("cl2").innerHTML=L.length?`<table><tr><th>ID</th><th>Name</th><th>Phone</th><th>Address</th><th class="r">Bills</th><th class="r">Purchase</th><th class="r">Due</th><th></th></tr>`+L.map(c=>{const S=D.s.filter(s=>s.cp===c.p),du=S.reduce((a,s)=>a+s.due,0);return`<tr><td><b>${esc(c.id)}</b></td><td>${esc(c.n)}</td><td>${esc(c.p)}</td><td style="white-space:normal;min-width:150px">${esc(c.a)}</td><td class="r">${S.length}</td><td class="r">${m(S.reduce((a,s)=>a+s.total,0))}</td><td class="r ${du>0.005?"low":""}">${m(du)}</td><td><button class="s" onclick="viewC('${c.id}')">View</button> <button class="s" onclick="editC('${c.id}')">Edit</button> <button class="x" onclick="delC('${c.id}')">×</button></td></tr>`}).join("")+"</table>":'<div class="em">No customers found</div>'}
+ $("cl2").innerHTML=L.length?`<table><tr><th>ID</th><th>Name</th><th>Phone</th><th>Address</th><th class="r">Bills</th><th class="r">Purchase</th><th class="r">Due</th><th></th></tr>`+L.map(c=>{const S=D.s.filter(s=>sameP(s.cp,c.p)),du=S.reduce((a,s)=>a+s.due,0);return`<tr><td><b>${esc(c.id)}</b></td><td>${esc(c.n)}</td><td>${esc(c.p)}</td><td style="white-space:normal;min-width:150px">${esc(c.a)}</td><td class="r">${S.length}</td><td class="r">${m(S.reduce((a,s)=>a+s.total,0))}</td><td class="r ${du>0.005?"low":""}">${m(du)}</td><td><button class="s" onclick="viewC('${c.id}')">View</button> <button class="s" onclick="editC('${c.id}')">Edit</button> <button class="x" onclick="delC('${c.id}')">×</button></td></tr>`}).join("")+"</table>":'<div class="em">No customers found</div>'}
 
 /* Sales */
 function rSales(){const q=$("ss").value.toLowerCase(),td=new Date().toDateString(),T=D.s.filter(s=>new Date(s.d).toDateString()===td);
- const prof=a=>a.reduce((x,s)=>x+s.it.reduce((y,i)=>y+(i.p-i.c)*i.q,0)-s.disc,0);
+ const prof=a=>a.reduce((x,s)=>x+s.it.reduce((y,i)=>y+(i.p-(i.c||0))*i.q-(i.c||0)*(i.g||0),0)-s.disc,0);
  $("kp").innerHTML=`<div><small>Sales today</small><b>${T.length}</b></div><div><small>Revenue today</small><b>${m(T.reduce((a,s)=>a+s.total,0))}</b></div><div><small>Profit today</small><b>${m(prof(T))}</b></div><div><small>Total due</small><b>${m(D.s.reduce((a,s)=>a+s.due,0))}</b></div><div><small>Wholesale today</small><b>${m(T.filter(s=>s.w).reduce((a,s)=>a+s.total,0))}</b></div><div><small>Products</small><b>${D.p.length}</b></div>`;
  const L=D.s.filter(s=>((s.w?"ws-":"inv-")+nf(s.no)+" "+s.cn+" "+s.cp+" "+(s.ci||"")).toLowerCase().includes(q));
  $("sl").innerHTML=L.length?`<table><tr><th>Invoice</th><th>Date</th><th>Type</th><th>Customer</th><th>Phone</th><th class="r">Total</th><th class="r">Due</th><th></th></tr>`+L.map(s=>{const i=D.s.indexOf(s);return`<tr><td>${s.w?"WS":"INV"}-${nf(s.no)}</td><td>${new Date(s.d).toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</td><td>${s.w?"Wholesale":"Retail"}</td><td>${esc(s.cn||"Walk-in Customer")}${s.ci?` <small>(${esc(s.ci)})</small>`:""}</td><td>${esc(s.cp)}</td><td class="r">${m(s.total)}</td><td class="r ${s.due>0.005?"low":""}">${m(s.due)}</td><td><button class="s" onclick="printInv(D.s[${i}])">Reprint</button> <button class="x" onclick="delS(${i})">×</button></td></tr>`}).join("")+"</table>":'<div class="em">No sales found</div>'}
-function delS(i){if(!confirm("Deleting this sale will restore its stock. Continue?"))return;const s=D.s.splice(i,1)[0];
+function delS(i){if(!D.s[i]||!confirm("Deleting this sale will restore its stock. Continue?"))return;const s=D.s.splice(i,1)[0];
+ if(s.clr&&s.clr.length){if(Math.abs((s.due||0)-(s.due0??s.due))<0.005)s.clr.forEach(c=>{const o=D.s.find(x=>x.no===c.no&&!!x.w===c.w);if(o)o.due=R2(o.due+c.due)});else toast("Previous dues were not restored: part of this bill was already collected")}
  s.it.forEach(x=>{const p=D.p.find(y=>(x.b&&y.b===x.b)||y.n===x.n);if(p)p.st+=x.q+(x.g||0)});save();rSales()}
 
 /* ===== Period / payment helpers ===== */
@@ -480,7 +489,7 @@ const mtxt=p=>PM.map((n,i)=>p[i]>0?n+" "+p[i]:"").filter(Boolean).join(", ")||"-
 /* ===== Earnings ===== */
 const ymd=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 function rEarn(){if(!$("ef").value)$("ef").value=ymd(new Date());if(!$("et").value)$("et").value=ymd(new Date());
- const a=new Date($("ef").value+"T00:00:00"),b=new Date($("et").value+"T00:00:00");let lo=+a,hi=+b+864e5;
+ const a=new Date($("ef").value+"T00:00:00"),b=new Date($("et").value+"T00:00:00");let lo=Math.min(+a,+b),hi=Math.max(+a,+b)+864e5;
  const R=[["d","Today"],["w","This week"],["m","This month"],["y","This year"],["c","Custom ("+$("ef").value+" → "+$("et").value+")"]].map(([k,l])=>{
   const ok=t=>k==="c"?(t>=lo&&t<hi):t>=pStart(k),P=[0,0];rcv().filter(x=>ok(x.t)).forEach(x=>{P[x.w?1:0]+=sum(x.p||[])});
   const du=sum(D.s.filter(s=>ok(s.d)).map(s=>s.due));return`<tr><td>${esc(l)}</td><td class="r">${m(P[0])}</td><td class="r">${m(P[1])}</td><td class="r"><b>${m(P[0]+P[1])}</b></td><td class="r" style="color:var(--mu)">${m(du)}</td></tr>`}).join("");
@@ -510,7 +519,7 @@ function rDash(){rEarn();
 let dueMode="R",dueC=null;
 function dueList(w){const mp={};D.s.forEach(s=>{if(!!s.w===w&&s.due>0.005&&s.cp){const o=mp[s.cp]||(mp[s.cp]={p:s.cp,n:s.cn,ci:s.ci,due:0,k:0});o.due+=s.due;o.k++}});
  return Object.values(mp).map(o=>{const c=D.cu.find(y=>y.p===o.p);return{p:o.p,n:c?c.n:o.n,id:c?c.id:o.ci,due:o.due,k:o.k}}).sort((a,b)=>b.due-a.due)}
-function dueFilter(){const q=$("dq").value.trim().toLowerCase().replace(/-/g,""),L=dueList(dueMode==="W");return q?L.filter(x=>(x.n+" "+x.p+" "+(x.id||"")).toLowerCase().replace(/-/g,"").includes(q)):L}
+function dueFilter(){const q=$("dq").value.trim(),L=dueList(dueMode==="W");return q?L.filter(x=>cmatch(q,x.n,x.p,x.id)):L}
 function rDue(){$("dth").textContent=(dueMode==="W"?"Wholesale":"Retail")+" due customers";rDueList();rDuePanel();rDueHist()}
 function rDueList(){const w=dueMode==="W",L=dueFilter(),q=$("dq").value.trim(),all=dueList(w);
  $("dl2").innerHTML=(all.length?`<div class="cb" style="margin:0 0 8px">Total ${w?"wholesale":"retail"} due: <b>${m(sum(all.map(x=>x.due)))}</b> · ${all.length} customer</div>`:"")+
@@ -528,9 +537,9 @@ function rDuePanel(){const box=$("dpn");
 <div class="row"><div><label>Bank</label><input id="dq1" type="number" min="0" oninput="dueCalc()"></div><div><label>bKash</label><input id="dq2" type="number" min="0" oninput="dueCalc()"></div><div><label>Cash</label><input id="dq3" type="number" min="0" oninput="dueCalc()"></div><div><label>Nagad</label><input id="dq4" type="number" min="0" oninput="dueCalc()"></div></div>
 <label>Note</label><input id="dnt" placeholder="Optional">
 <div class="fr"><span>Receiving: <b id="drc">${m(0)}</b></span><button class="s" onclick="dueFull()">Full due (Cash)</button><button class="gr" onclick="dueSave()">Receive payment</button></div>`}
-function dueCalc(){$("drc").textContent=m(sum([1,2,3,4].map(i=>$("dq"+i).value)))}
-function dueFull(){const tot=sum(dueBills().map(s=>s.due)),o=sum([1,2,4].map(i=>$("dq"+i).value));$("dq3").value=f(Math.max(0,tot-o));dueCalc()}
-function dueSave(){const w=dueMode==="W",B=dueBills(),tot=sum(B.map(s=>s.due)),pay=[1,2,3,4].map(i=>parseFloat($("dq"+i).value)||0),amt=sum(pay);
+function dueCalc(){$("drc").textContent=m(sum([1,2,3,4].map(i=>Math.max(0,parseFloat($("dq"+i).value)||0))))}
+function dueFull(){const tot=sum(dueBills().map(s=>s.due)),o=sum([1,2,4].map(i=>Math.max(0,parseFloat($("dq"+i).value)||0)));$("dq3").value=f(Math.max(0,tot-o));dueCalc()}
+function dueSave(){const w=dueMode==="W",B=dueBills(),tot=sum(B.map(s=>s.due)),pay=[1,2,3,4].map(i=>Math.max(0,parseFloat($("dq"+i).value)||0)),amt=R2(sum(pay));
  if(!B.length)return;if(amt<=0)return toast("Enter the amount received");if(amt>tot+0.005)return toast("Amount cannot exceed the total due ("+m(tot)+")");
  let r=amt;const bl=[];B.forEach(s=>{if(r<=0.0001)return;const x=Math.min(s.due,r);s.due=s.due-x<0.005?0:Math.round((s.due-x)*100)/100;r-=x;bl.push({no:s.no,a:x})});
  const c=D.cu.find(x=>x.p===dueC);D.dp.push({id:"dp"+Date.now(),d:Date.now(),w,cp:dueC,ci:c?c.id:B[0].ci,cn:c?c.n:B[0].cn,amt,pay,note:$("dnt").value.trim(),bl});
@@ -545,7 +554,7 @@ function closeCV(){$("cv").style.display="none"}
 function setCvp(k){cvp=k;rCV()}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeCV()});
 function rCV(){const c=D.cu.find(x=>x.id===cvId);if(!c)return closeCV();
- const S=D.s.filter(s=>s.cp===c.p),DP=D.dp.filter(x=>x.cp===c.p),
+ const S=D.s.filter(s=>sameP(s.cp,c.p)),DP=D.dp.filter(x=>sameP(x.cp,c.p)),
  paidOf=k=>sum(S.filter(s=>inP(s.d,k)).map(s=>sum(payOf(s))))+sum(DP.filter(x=>inP(x.d,k)).map(x=>x.amt)),
  dR=sum(S.filter(s=>!s.w).map(s=>s.due)),dW=sum(S.filter(s=>s.w).map(s=>s.due)),
  SP=S.filter(s=>inP(s.d,cvp)),DPP=DP.filter(x=>inP(x.d,cvp)),Pr={};
@@ -615,7 +624,7 @@ setInterval(()=>{if(D.tg.q.length)tgFlush()},60000);addEventListener("online",()
 /* Settings */
 const sf={shop:"s_shop",addr:"s_addr",web:"s_web",phone:"s_phone",email:"s_email",tax:"s_tax",vat:"s_vat",maxd:"s_maxd",cur:"s_cur",paper:"s_paper",foot:"s_foot"};
 function rSet(){for(const k in sf)$(sf[k]).value=D.c[k];tgLoad()}
-function saveSet(){for(const k in sf)D.c[k]=$(sf[k]).value;D.c.vat=parseFloat(D.c.vat)||0;D.c.maxd=isNaN(parseFloat(D.c.maxd))?30:parseFloat(D.c.maxd);D.c.cur=D.c.cur||"৳";save();head();toast("Settings saved")}
+function saveSet(){for(const k in sf)D.c[k]=$(sf[k]).value;D.c.vat=Math.min(100,Math.max(0,parseFloat(D.c.vat)||0));D.c.maxd=isNaN(parseFloat(D.c.maxd))?30:Math.min(100,Math.max(0,parseFloat(D.c.maxd)));D.c.cur=D.c.cur||"৳";save();head();toast("Settings saved")}
 function restore(){try{const r=JSON.parse($("bk").value);if(!r.p||!r.s)throw 0;D={...D,...r,c:{...D.c,...r.c},tg:{...D.tg,...(r.tg||{}),f:{...D.tg.f,...((r.tg||{}).f||{})},token:D.tg.token,q:[]}};save();rSet();rPos();toast("Restore complete")}catch(e){toast("Invalid backup data")}}
 rPos();$("q").focus();
 </script>
