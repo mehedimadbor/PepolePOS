@@ -59,7 +59,7 @@ td input.q{width:70px;padding:5px 8px;text-align:center}
 .ig svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2}
 table.pt th,table.pt td{border:1px solid var(--bd)}table.pt th{color:var(--tx);text-transform:none;font-size:12.5px}
 table.pt input{padding:6px 8px;min-width:70px}
-.sr td:first-child{text-align:right;font-weight:700;white-space:normal}
+.sr td:first-child{text-align:right;font-weight:700;white-space:normal}table.sb{width:auto;margin:10px 0 4px;border-collapse:separate;border-spacing:0 5px}table.sb tr,table.sb td{border:0!important;background:none!important;padding:0 8px 0 0}table.sb td:first-child{text-align:left;font-weight:700;font-size:13px;white-space:nowrap;min-width:160px}table.sb .sh td{font-size:11.5px;color:var(--mu);font-weight:600}table.sb input{width:110px;min-width:0;padding:5px 8px;font-size:13px}table.sb input[type=radio]{width:auto;margin-right:6px}table.sb label{display:block;margin:0;font-size:13px;color:var(--tx);font-weight:600}
 .pay{display:flex;flex-wrap:wrap;border:1px solid var(--bd);border-top:0}
 .pay .pl{flex:2;min-width:280px;padding:12px;border-right:1px solid var(--bd)}.pay .pr2{flex:1;min-width:290px}
 .pay .pr2>div{display:grid;grid-template-columns:1fr 150px;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--bd)}
@@ -145,12 +145,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="cb" id="cb"></div>
 <div class="bar"><div class="pw"><label>Product</label><div class="sw"><div class="ig"><span><svg viewBox="0 0 24 24"><path d="M4 5v14M7 5v14M11 5v14M14 5v14M18 5v14M21 5v14"/></svg></span><input id="q" autocomplete="off" placeholder="Scan Barcode Or Search Product" oninput="sug()" onkeydown="qEnter(event)"></div><div id="sg" onmousedown="event.preventDefault()" ontouchstart="event.stopPropagation()"></div></div></div>
 <div class="qb"><label>Qty</label><input id="aq" type="number" min="1" value="1" onkeydown="if(event.key==='Enter')qAdd()"></div><button class="gr" onclick="qAdd()">Add Item</button></div>
-<div class="wrap"><table class="pt"><thead><tr><th>#SI.</th><th>Item</th><th>Stock</th><th>Price</th><th>Qty</th><th>Total</th><th>Action</th></tr></thead><tbody id="cl"></tbody>
-<tfoot>
-<tr class="sr"><td colspan="4">Subtotal</td><td><input id="sq" readonly></td><td><input id="st" readonly></td><td></td></tr>
-<tr class="sr"><td colspan="4"><label style="display:inline;font-size:13px;color:var(--tx)"><input type="radio" name="dtp" id="df" checked onchange="calc()" style="width:auto"> Discount(Fixed)</label><br><label style="display:inline;font-size:13px;color:var(--tx)"><input type="radio" name="dtp" id="dp" onchange="calc()" style="width:auto"> Discount(%)</label><br><small id="mx" style="font-weight:400"></small></td><td><input id="dv" type="number" min="0" oninput="calc()"></td><td><input id="tdi" readonly></td><td></td></tr>
-<tr class="sr"><td colspan="4">VAT (%)</td><td><input id="vp" type="number" min="0" oninput="calc()"></td><td><input id="tv" readonly></td><td></td></tr>
-</tfoot></table></div>
+<div class="wrap"><table class="pt"><thead><tr><th>#SI.</th><th>Item</th><th>Stock</th><th>Price</th><th>Qty</th><th>Gift</th><th>Total</th><th>Action</th></tr></thead><tbody id="cl"></tbody>
+</table></div>
+<table class="sb"><tr class="sh"><td></td><td>Qty</td><td>Amount</td></tr>
+<tr><td>Subtotal</td><td><input id="sq" readonly></td><td><input id="st" readonly></td></tr>
+<tr><td>Gift (not charged)</td><td><input id="gq" readonly></td><td><input id="gv" readonly></td></tr>
+<tr><td><label><input type="radio" name="dtp" id="df" checked onchange="calc()"> Discount (Fixed)</label><label><input type="radio" name="dtp" id="dp" onchange="calc()"> Discount (%)</label></td><td><input id="dv" type="number" min="0" oninput="calc()"></td><td><input id="tdi" readonly></td></tr>
+<tr><td>VAT (%)</td><td><input id="vp" type="number" min="0" oninput="calc()"></td><td><input id="tv" readonly></td></tr></table>
 <div class="pay"><div class="pl"><b>Payment Methods:</b> <button class="s" style="padding:3px 9px;margin-left:8px" onclick="fullCash()">Full cash</button>
 <div class="row"><div><label>Bank</label><input id="pb1" type="number" min="0" oninput="calc()"></div><div><label>bKash</label><input id="pb2" type="number" min="0" oninput="calc()"></div><div><label>Cash</label><input id="pb3" type="number" min="0" oninput="calc()"></div><div><label>Nagad</label><input id="pb4" type="number" min="0" oninput="calc()"></div></div>
 <label>Note</label><input id="nt" placeholder="Optional"></div>
@@ -226,7 +227,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <div class="card"><h2 id="cft">New customer</h2><input type="hidden" id="cuid">
     <label>Name *</label><input id="cun" oninput="cuprev()"><label>Phone *</label><input id="cup" type="tel" oninput="cuprev()"><label>Address</label><textarea id="cua" rows="3"></textarea>
     <div class="cb" id="cprev"></div>
-    <div class="row" style="margin-top:12px"><button onclick="saveC()">Save customer</button><button class="s" onclick="resetC()">Reset</button></div></div>
+    <div class="row" style="margin-top:12px"><button onclick="saveC()">Save customer</button><button class="s" onclick="resetC()">Reset</button></div>
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--bd)"><b>Import from sheet (Excel / CSV)</b><div class="cb">Columns: <b>Name, Phone, Address</b>. Customer ID is created automatically (first 3 letters of name + last 4 digits of phone). Duplicate phones are skipped.</div><input type="file" accept=".xlsx,.xls,.csv" onchange="upCust(event)" style="margin-top:8px"></div></div>
   <div class="card"><h2>Customer list</h2><input id="cq" placeholder="Search by name, phone or ID" oninput="rCust()"><div class="wrap" style="margin-top:8px" id="cl2"></div></div>
 </div></div>
 
@@ -258,7 +260,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <label>Address</label><input id="s_addr"><label>Website</label><input id="s_web">
     <div class="row"><div><label>Phone</label><input id="s_phone"></div><div><label>Email</label><input id="s_email"></div></div>
     <div class="row"><div><label>BIN / Trade license</label><input id="s_tax"></div><div><label>VAT %</label><input id="s_vat" type="number" min="0"></div></div>
-    <div class="row"><div><label>Currency symbol</label><input id="s_cur"></div><div><label>Max discount %</label><input id="s_maxd" type="number" min="0" max="100"></div><div><label>Invoice paper</label><select id="s_paper" onchange="setPaper(this.value)"><option value="80">Thermal 80mm</option><option value="58">Thermal 58mm</option><option value="A4">A4 Invoice</option></select></div></div>
+    <div class="row"><div><label>Currency symbol</label><input id="s_cur"></div><div><label>Invoice paper</label><select id="s_paper" onchange="setPaper(this.value)"><option value="80">Thermal 80mm</option><option value="58">Thermal 58mm</option><option value="A4">A4 Invoice</option></select></div></div>
     <label>Invoice footer note</label><input id="s_foot">
     <button style="margin-top:12px" onclick="saveSet()">Save settings</button>
   </div>
@@ -291,7 +293,7 @@ const $=i=>document.getElementById(i),esc=s=>String(s??"").replace(/[&<>"]/g,c=>
 try{const t=localStorage.getItem("dx_theme");if(t)document.documentElement.dataset.theme=t}catch(e){}
 function theme(){const d=document.documentElement,c=d.dataset.theme||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"),n=c==="dark"?"light":"dark";d.dataset.theme=n;try{localStorage.setItem("dx_theme",n)}catch(e){}}
 const KEY="dx_pro";
-let D={p:[],s:[],h:[],cu:[],dp:[],n:1,c:{shop:"Dealexcart",addr:"Rampura, Dhaka, Bangladesh",web:"www.dealexcart.com",phone:"",email:"",tax:"",vat:0,maxd:30,foot:"Thank you for shopping with us!",cur:"৳",paper:"80"}};
+let D={p:[],s:[],h:[],cu:[],dp:[],n:1,c:{shop:"Dealexcart",addr:"Rampura, Dhaka, Bangladesh",web:"www.dealexcart.com",phone:"",email:"",tax:"",vat:0,foot:"Thank you for shopping with us!",cur:"৳",paper:"80"}};
 try{const r=JSON.parse(localStorage.getItem(KEY)||"null");if(r)D={...D,...r,c:{...D.c,...(r.c||{})}}}catch(e){}
 if(!D.dp)D.dp=[];D.tg={on:false,token:"",chat:"",for:"A",due:false,ok:0,err:"",...D.tg,f:{date:true,cust:true,phone:false,items:false,iprice:true,amt:false,disc:false,pay:true,prev:false,note:true,...(D.tg&&D.tg.f)}};if(!Array.isArray(D.tg.q))D.tg.q=[];(()=>{let mx=D.p.reduce((a,p)=>Math.max(a,p.no||0),0);D.p.forEach(p=>{if(!p.no)p.no=++mx})})();if(!D.c.addr)D.c.addr="Rampura, Dhaka, Bangladesh";if(!D.c.web)D.c.web="www.dealexcart.com";
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){toast("Storage is full. Take a backup and remove some images.")}};
@@ -319,20 +321,20 @@ function qAdd(){const q=$("q").value.trim();if(!q)return;const p=D.p.find(x=>x.i
 function add(id,n){const p=D.p.find(x=>x.id===id),l=cart.find(x=>x.id===id),q=(l?l.q+l.g:0)+n;
  if(q>p.st&&!confirm("Only "+p.st+" in stock. Add anyway?"))return;l?l.q+=n:cart.push({id,q:n,g:0});
  sel=null;$("q").value="";$("aq").value=1;$("sg").style.display="none";rCart();$("q").focus()}
-function rPos(){head();$("mx").textContent="Max "+D.c.maxd+"%";if($("vp").value==="")$("vp").value=D.c.vat||"";rCart()}
+function rPos(){head();if($("vp").value==="")$("vp").value=D.c.vat||"";rCart()}
 function lines(){return cart.map(l=>({p:D.p.find(x=>x.id===l.id),q:l.q,g:l.g,r:l.r})).filter(l=>l.p).map(l=>({...l,pr:l.r>0?l.r:pp(l.p)}))}
 function setR(i,v){cart[i].r=parseFloat(v)||0;rCart()}
-function rCart(){const L=lines();$("cl").innerHTML=L.length?L.map((l,i)=>`<tr><td>${i+1}</td><td>${esc(l.p.n)}<br><small style="color:var(--mu)">${esc(l.p.b)}</small></td><td>${l.p.st}</td><td>${mode==="W"?`<input class="q" style="width:92px${l.pr<l.p.cost?";border-color:var(--dg)":""}" type="number" min="0" value="${l.pr}" onchange="setR(${i},this.value)">`:m(l.pr)}</td><td><input class="q" type="number" min="1" value="${l.q}" onchange="setQ(${i},'q',this.value)"></td><td>${m(l.pr*l.q)}</td><td><button class="x" onclick="cart.splice(${i},1);rCart()">×</button></td></tr>`).join(""):'<tr><td colspan="7" class="em">Bill is empty. Scan a barcode or search for a product.</td></tr>';calc()}
-function setQ(i,k,v){const l=cart[i],n=Math.max(k==="q"?1:0,parseInt(v)||0),p=D.p.find(x=>x.id===l.id);if(k==="q"&&p&&n>l.q&&n+(l.g||0)>p.st&&!confirm("Only "+p.st+" in stock. Add anyway?")){rCart();return}l[k]=n;rCart()}
+function rCart(){const L=lines();$("cl").innerHTML=L.length?L.map((l,i)=>`<tr><td>${i+1}</td><td>${esc(l.p.n)}<br><small style="color:var(--mu)">${esc(l.p.b)}</small></td><td>${l.p.st}</td><td>${mode==="W"?`<input class="q" style="width:92px${l.pr<l.p.cost?";border-color:var(--dg)":""}" type="number" min="0" value="${l.pr}" onchange="setR(${i},this.value)">`:m(l.pr)}</td><td><input class="q" type="number" min="1" value="${l.q}" onchange="setQ(${i},'q',this.value)"></td><td><input class="q" type="number" min="0" value="${l.g||0}" onchange="setQ(${i},'g',this.value)"></td><td>${m(l.pr*l.q)}${l.g>0?`<br><small style="color:var(--mu)">${l.g} × ${m(l.pr)} = ${m(l.pr*l.g)} (free)</small>`:""}</td><td><button class="x" onclick="cart.splice(${i},1);rCart()">×</button></td></tr>`).join(""):'<tr><td colspan="8" class="em">Bill is empty. Scan a barcode or search for a product.</td></tr>';calc()}
+function setQ(i,k,v){const l=cart[i],n=Math.max(k==="q"?1:0,parseInt(v)||0),p=D.p.find(x=>x.id===l.id),tot=(k==="q"?n:l.q)+(k==="g"?n:(l.g||0));if(p&&n>(l[k]||0)&&tot>p.st&&!confirm("Only "+p.st+" in stock. Add anyway?")){rCart();return}l[k]=n;rCart()}
 function prevDue(){const p=$("cp").value.trim();return p?R2(D.s.filter(s=>sameP(s.cp,p)&&!!s.w===(mode==="W")).reduce((a,s)=>a+s.due,0)):0}
 function calc(){const L=lines(),sub=R2(L.reduce((a,l)=>a+R2(l.pr*l.q),0)),qs=L.reduce((a,l)=>a+l.q,0),pct=$("dp").checked;
  let dv=Math.max(0,parseFloat($("dv").value)||0);
- if(pct&&dv>D.c.maxd){dv=D.c.maxd;$("dv").value=dv;toast("Max discount "+D.c.maxd+"%")}
- if(!pct&&sub>0){const cap=R2(sub*D.c.maxd/100);if(dv>cap){dv=cap;toast("Max discount "+D.c.maxd+"% ("+m(cap)+")")}}
+ if(pct&&dv>100){dv=100;$("dv").value=dv}
  const disc=R2(Math.min(sub,pct?sub*dv/100:dv)),vp=Math.min(100,Math.max(0,parseFloat($("vp").value)||0)),vat=R2((sub-disc)*vp/100),del=R2(Math.max(0,parseFloat($("dl").value)||0)),total=R2(sub-disc+vat+del),
  prev=prevDue(),gt=R2(total+prev),pays=["pb1","pb2","pb3","pb4"].map(i=>Math.max(0,parseFloat($(i).value)||0)),paid=R2(pays.reduce((a,b)=>a+b,0)),due=R2(gt-paid);
+ const gq=L.reduce((a,l)=>a+(l.g||0),0),gv=R2(L.reduce((a,l)=>a+R2(l.pr*(l.g||0)),0));$("gq").value=gq;$("gv").value=f(gv);
  $("sq").value=qs;$("st").value=f(sub);$("tdi").value=f(disc);$("tv").value=f(vat);$("gt").value=f(total);$("pv").value=f(prev);$("gg").value=f(gt);$("pa").value=f(paid);$("du").value=f(due);
- return{sub,disc,vat,vp,del,total,prev,gt,paid,due,pays}}
+ return{sub,disc,vat,vp,del,total,prev,gt,paid,due,pays,gq,gv}}
 function fullCash(){const o=["pb1","pb2","pb4"].reduce((a,i)=>a+Math.max(0,parseFloat($(i).value)||0),0);$("pb3").value=f(Math.max(0,calc().gt-o));calc()}
 function fillC(){const p=$("cp").value.trim(),c=D.cu.find(x=>p&&pn(x.p)===pn(p));if(c){if(!$("cn").value)$("cn").value=c.n;if(!$("ca").value)$("ca").value=c.a}cinfo();calc();const v=prevDue();if(v>0)toast("Previous due: "+m(v))}
 function clearCart(ask){if(ask&&cart.length&&!confirm("Clear the current bill?"))return;cart=[];["cs","cn","cp","ca","nt","pb1","pb2","pb3","pb4","dv"].forEach(i=>$(i).value="");$("dl").value=0;$("df").checked=true;$("vp").value=D.c.vat||"";cinfo();rCart()}
@@ -354,11 +356,12 @@ function setPaper(v){D.c.paper=v;save();["sf","s_paper"].forEach(i=>$(i)&&($(i).
 function printInv(s,fmt){fmt=fmt||D.c.paper;const c=D.c,th=fmt!=="A4",dt=new Date(s.d).toLocaleString("en-GB",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}),no=(s.w?"WS-":"INV-")+nf(s.no),paid=s.due<=0.005;
  $("inv").className=th?"rc w"+fmt:"";$("pg").textContent=th?`@page{size:${fmt}mm auto;margin:0}`:"@page{size:A4;margin:12mm}";
  $("inv").innerHTML=th?rcpt(s,c,dt,no,paid):a4(s,c,dt,no,paid);setTimeout(()=>window.print(),50)}
+const gf=s=>{const G=(s.it||[]).filter(x=>x.g>0);return{G,gq:G.reduce((a,x)=>a+x.g,0),gv:R2(G.reduce((a,x)=>a+x.p*x.g,0))}};
 function rcpt(s,c,dt,no,paid){const kv=(a,b,k)=>`<div class="kv${k?" b":""}"><span>${a}</span><span>${b}</span></div>`;
  return `<div class="sn">${esc(c.shop)}</div><div class="c">${esc(c.addr)}</div>${c.web?`<div class="c">${esc(c.web)}</div>`:""}${c.phone?`<div class="c">Tel: ${esc(c.phone)}</div>`:""}${c.tax?`<div class="c">BIN: ${esc(c.tax)}</div>`:""}<hr class="dd">
 ${s.w?`<div class="c b big">WHOLESALE INVOICE</div>`:""}${kv("Invoice",no)}${kv("Date",dt)}<hr class="dd">
 <div class="cu">${esc(s.cn||"Walk-in Customer")}</div>${s.ci?`<div>ID: ${esc(s.ci)}</div>`:""}${s.cp?`<div class="cu">${esc(s.cp)}</div>`:""}${s.ca?`<div class="b">${esc(s.ca)}</div>`:""}<hr class="dd">
-${s.it.map(x=>`<div>${esc(x.n)}</div>${kv(x.q+" x "+m(x.p),m(x.p*x.q))}${x.g?`<div>+ ${x.g} gift</div>`:""}`).join("")}<hr class="dd">
+${s.it.map(x=>`<div>${esc(x.n)}</div>${kv(x.q+" x "+m(x.p),m(x.p*x.q))}`).join("")}<hr class="dd">${gf(s).G.length?`<div class="b">GIFT ITEMS (free)</div>${gf(s).G.map(x=>kv(esc(x.n)+" x "+x.g,m(x.p*x.g))).join("")}${kv("Total Gift",m(gf(s).gv),1)}<hr class="dd">`:""}
 ${kv("Subtotal",m(s.sub))}${s.disc?kv("Discount","-"+m(s.disc)):""}${s.vat?kv("VAT ("+(s.vp??c.vat)+"%)",m(s.vat)):""}${s.del?kv("Delivery",m(s.del)):""}
 <div class="kv big"><span>TOTAL</span><span>${m(s.total)}</span></div>${s.prev?kv("Previous Due",m(s.prev))+kv("Grand Total",m(s.gt),1):""}${kv("Paid",m(s.paid))}${kv("Due",m(s.due),1)}
 <hr class="dd"><div class="c">Payment: ${esc(s.m)}</div><div class="c b">${paid?"*** PAID ***":"*** DUE ***"}</div><hr class="dd"><div class="c">${esc(c.foot)}</div>`}
@@ -366,7 +369,7 @@ function a4(s,c,dt,no,paid){const gt=s.gt??s.total;
  return `<div class="ih"><div class="sh"><h1>${esc(c.shop)}</h1>${esc(c.addr)}${c.web?"<br>"+esc(c.web):""}${c.phone?"<br>Phone: "+esc(c.phone):""}${c.email?" · "+esc(c.email):""}${c.tax?"<br>BIN: "+esc(c.tax):""}</div>
 <div class="ib"><div class="tag" style="${s.w?"font-size:17px;letter-spacing:2px":""}">${s.w?"WHOLESALE INVOICE":"INVOICE"}</div><table><tr><td>Invoice No</td><td>${no}</td></tr><tr><td>Date</td><td>${dt}</td></tr><tr><td>Payment</td><td>${esc(s.m)}</td></tr></table></div></div>
 <div class="bt"><div class="cd"><div class="bl">BILL TO${s.ci?" · ID "+esc(s.ci):""}</div><div class="cnm">${esc(s.cn||"Walk-in Customer")}</div>${s.cp?`<div class="cph">Phone: ${esc(s.cp)}</div>`:""}${s.ca?`<div class="cad">Address: ${esc(s.ca)}</div>`:""}</div><div class="stb"><div class="bl">STATUS</div><div class="st" style="color:${paid?"#15803d":"#b91c1c"}">${paid?"PAID":"DUE"}</div></div></div>
-<table><tr><th>#</th><th>Item Description</th><th class="r">Price</th><th class="r">Qty</th><th class="r">Amount</th></tr>${s.it.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.n)}${x.b?`<br><small style="color:#64748b">${esc(x.b)}</small>`:""}</td><td class="r">${m(x.p)}</td><td class="r">${x.q}${x.g?` +${x.g} gift`:""}</td><td class="r">${m(x.p*x.q)}</td></tr>`).join("")}</table>
+<table><tr><th>#</th><th>Item Description</th><th class="r">Price</th><th class="r">Qty</th><th class="r">Amount</th></tr>${s.it.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.n)}${x.b?`<br><small style="color:#64748b">${esc(x.b)}</small>`:""}</td><td class="r">${m(x.p)}</td><td class="r">${x.q}${x.g?` +${x.g} gift`:""}</td><td class="r">${m(x.p*x.q)}</td></tr>`).join("")}</table>${gf(s).G.length?`<table style="margin-top:8px"><tr><th>Gift Items (not charged)</th><th class="r">Price</th><th class="r">Qty</th><th class="r">Amount</th></tr>${gf(s).G.map(x=>`<tr><td>${esc(x.n)}</td><td class="r">${m(x.p)}</td><td class="r">${x.g}</td><td class="r">${m(x.p*x.g)}</td></tr>`).join("")}<tr><td colspan="3"><b>Total Gift Value</b></td><td class="r"><b>${m(gf(s).gv)}</b></td></tr></table>`:""}
 <div class="sum"><div class="wd"><b>AMOUNT IN WORDS</b>Taka ${words(gt)} Only${s.note?`<br><br><b>NOTE</b>${esc(s.note)}`:""}</div><div class="tt">${s.w?`<div><span>Total Qty</span><span>${s.it.reduce((a,x)=>a+x.q+(x.g||0),0)}</span></div>`:""}<div><span>Subtotal</span><span>${m(s.sub)}</span></div>${s.disc?`<div><span>Discount</span><span>-${m(s.disc)}</span></div>`:""}${s.vat?`<div><span>VAT (${s.vp??D.c.vat}%)</span><span>${m(s.vat)}</span></div>`:""}<div><span>Delivery Charge</span><span>${m(s.del)}</span></div><div class="g"><span>Total</span><span>${m(s.total)}</span></div>${s.prev?`<div><span>Previous Due</span><span>${m(s.prev)}</span></div><div><b>Grand Total</b><b>${m(s.gt)}</b></div>`:""}<div><span>Paid</span><span>${m(s.paid)}</span></div><div><span>Due</span><b>${m(s.due)}</b></div></div></div>
 <div class="sg"><div>Customer Signature</div><div>Authorized Signature</div></div><div class="ft">${esc(c.foot)}${c.web?" · "+esc(c.web):""}</div>`}
 
@@ -455,6 +458,16 @@ function csug(){const r=csearch($("cs").value).slice(0,8);$("csg").innerHTML=r.m
 function cpick(id){const c=D.cu.find(x=>x.id===id);if(!c)return;$("cn").value=c.n;$("cp").value=c.p;$("ca").value=c.a;$("cs").value="";$("csg").style.display="none";cinfo();calc();const v=prevDue();if(v>0)toast("Previous due: "+m(v))}
 function cinfo(){const n=$("cn").value.trim(),p=$("cp").value.trim(),c=D.cu.find(x=>p&&pn(x.p)===pn(p));$("cb").innerHTML=!n?"<b>Walk-in Customer</b> (leave the name empty for a walk-in bill)":c?`Customer ID: <b>${esc(c.id)}</b> · saved customer <button class="s" style="padding:2px 12px;margin-left:8px" onclick="viewC('${c.id}')">View</button>`:p?`<b>New customer</b> · ID after saving: <b>${esc(cid(n,p))}</b>`:"Enter a phone number to save this customer"}
 function cuprev(){const n=$("cun").value.trim(),p=$("cup").value.trim(),o=$("cuid").value;$("cprev").innerHTML=o?`Customer ID: <b>${esc(o)}</b>`:n&&p?`Customer ID: <b>${esc(cid(n,p))}</b>`:"ID = first 3 letters of name + last 4 digits of phone"}
+function upCust(e){const fl=e.target.files[0];if(!fl)return;const r=new FileReader();
+ if(window.XLSX){r.onload=()=>{try{const w=XLSX.read(r.result,{type:"array"});impC(XLSX.utils.sheet_to_json(w.Sheets[w.SheetNames[0]],{header:1,defval:""}))}catch(x){toast("Unable to read the file")}};r.readAsArrayBuffer(fl)}
+ else{r.onload=()=>impC(csv(r.result));r.readAsText(fl)}e.target.value=""}
+function impC(rows){rows=rows.filter(r=>r&&r.some(x=>String(x).trim()));if(!rows.length)return toast("File is empty");
+ let ni=0,pi=1,ai=2;const h=rows[0].map(x=>String(x).trim().toLowerCase()),hn=h.findIndex(x=>/name|নাম/.test(x)),hp=h.findIndex(x=>/phone|mobile|contact|number|ফোন|মোবাইল/.test(x)),ha=h.findIndex(x=>/address|ঠিকানা/.test(x));
+ if(hn>=0||hp>=0||ha>=0){rows.shift();if(hn>=0)ni=hn;if(hp>=0)pi=hp;if(ha>=0)ai=ha}else if(!pn(rows[0][pi]))rows.shift();
+ let add=0,dup=0,bad=0;
+ rows.forEach(r=>{const n=String(r[ni]??"").trim();let p=String(r[pi]??"").trim();const a=String(r[ai]??"").trim(),dg=nd(p).replace(/\D/g,"");if(dg.length===10&&dg[0]==="1")p="0"+dg;
+  if(!n||!pn(p)){bad++;return}if(D.cu.some(c=>sameP(c.p,p))){dup++;return}D.cu.push({id:cid(n,p),n,p,a,t:Date.now()});add++});
+ save();rCust();toast(add+" added, "+dup+" duplicate, "+bad+" invalid")}
 function resetC(){["cuid","cun","cup","cua"].forEach(i=>$(i).value="");$("cft").textContent="New customer";cuprev()}
 function saveC(){const n=$("cun").value.trim(),p=$("cup").value.trim(),a=$("cua").value.trim(),o=$("cuid").value;if(!n||!p)return toast("Enter name and phone");
  const d=D.cu.find(x=>sameP(x.p,p)&&x.id!==o);if(d)return toast("A customer with this phone already exists: "+d.id);
@@ -467,7 +480,7 @@ function rCust(){const L=$("cq").value.trim()?csearch($("cq").value):D.cu;
 /* Sales */
 function rSales(){const q=$("ss").value.toLowerCase(),td=new Date().toDateString(),T=D.s.filter(s=>new Date(s.d).toDateString()===td);
  const prof=a=>a.reduce((x,s)=>x+s.it.reduce((y,i)=>y+(i.p-(i.c||0))*i.q-(i.c||0)*(i.g||0),0)-s.disc,0);
- $("kp").innerHTML=`<div><small>Sales today</small><b>${T.length}</b></div><div><small>Revenue today</small><b>${m(T.reduce((a,s)=>a+s.total,0))}</b></div><div><small>Profit today</small><b>${m(prof(T))}</b></div><div><small>Total due</small><b>${m(D.s.reduce((a,s)=>a+s.due,0))}</b></div><div><small>Wholesale today</small><b>${m(T.filter(s=>s.w).reduce((a,s)=>a+s.total,0))}</b></div><div><small>Products</small><b>${D.p.length}</b></div>`;
+ $("kp").innerHTML=`<div><small>Sales today</small><b>${T.length}</b></div><div><small>Revenue today</small><b>${m(T.reduce((a,s)=>a+s.total,0))}</b></div><div><small>Profit today</small><b>${m(prof(T))}</b></div><div><small>Total due</small><b>${m(D.s.reduce((a,s)=>a+s.due,0))}</b></div><div><small>Wholesale today</small><b>${m(T.filter(s=>s.w).reduce((a,s)=>a+s.total,0))}</b></div><div><small>Gift given today</small><b>${m(T.reduce((a,s)=>a+gf(s).gv,0))}</b></div><div><small>Products</small><b>${D.p.length}</b></div>`;
  const L=D.s.filter(s=>((s.w?"ws-":"inv-")+nf(s.no)+" "+s.cn+" "+s.cp+" "+(s.ci||"")).toLowerCase().includes(q));
  $("sl").innerHTML=L.length?`<table><tr><th>Invoice</th><th>Date</th><th>Type</th><th>Customer</th><th>Phone</th><th class="r">Total</th><th class="r">Due</th><th></th></tr>`+L.map(s=>{const i=D.s.indexOf(s);return`<tr><td>${s.w?"WS":"INV"}-${nf(s.no)}</td><td>${new Date(s.d).toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</td><td>${s.w?"Wholesale":"Retail"}</td><td>${esc(s.cn||"Walk-in Customer")}${s.ci?` <small>(${esc(s.ci)})</small>`:""}</td><td>${esc(s.cp)}</td><td class="r">${m(s.total)}</td><td class="r ${s.due>0.005?"low":""}">${m(s.due)}</td><td><button class="s" onclick="printInv(D.s[${i}])">Reprint</button> <button class="x" onclick="delS(${i})">×</button></td></tr>`}).join("")+"</table>":'<div class="em">No sales found</div>'}
 function delS(i){if(!D.s[i]||!confirm("Deleting this sale will restore its stock. Continue?"))return;const s=D.s.splice(i,1)[0];
@@ -573,26 +586,27 @@ ${DPP.length?`<div class="card"><h2>Due payments received</h2><div class="wrap">
 const TGF=[["date","Date & time"],["cust","Customer name & ID"],["phone","Customer phone"],["items","Product list"],["iprice","  Show quantity, price & amount per product"],["amt","Subtotal, VAT & delivery"],["disc","Discount"],["pay","Payment methods & paid amount"],["prev","Previous due & grand total"],["note","Note"]];
 function tgReady(){const t=D.tg;return !!(t.on&&t.token&&t.chat)}
 function tgMsg(s,F){F=F||D.tg.f;const L=[],no=(s.w?"WS-":"INV-")+nf(s.no),pay=payOf(s),I=s.it||[];
- L.push(s.w?"📦 <b>WHOLESALE SALE</b>":"🛍 <b>RETAIL SALE</b>");L.push("Invoice: <b>"+no+"</b>");
+ L.push(s.w?"<b>WHOLESALE SALE</b>":"<b>RETAIL SALE</b>");L.push("Invoice: <b>"+no+"</b>");
  if(F.date)L.push("Date: "+dfm(s.d));
  if(F.cust)L.push("Customer: "+esc(s.cn||"Walk-in Customer")+(s.ci?" (ID: <b>"+esc(s.ci)+"</b>)":""));
  else if(s.ci)L.push("Customer ID: <b>"+esc(s.ci)+"</b>");
  if(F.phone&&s.cp)L.push("Phone: "+esc(s.cp));
  if(F.items&&I.length){L.push("","<b>Items</b>");I.slice(0,40).forEach((x,i)=>L.push((i+1)+". "+esc(x.n)+" × "+x.q+(F.iprice?" @ "+m(x.p)+" = "+m(x.p*x.q):"")));if(I.length>40)L.push("… and "+(I.length-40)+" more")}
  L.push("");
+ {const g=gf(s);if(g.G.length){L.push("<b>Gift items</b>");g.G.forEach(x=>L.push(esc(x.n)+" × "+x.g+" = "+m(x.p*x.g)));L.push("Gift total: "+m(g.gv),"")}}
  if(F.amt){L.push("Subtotal: "+m(s.sub));if(s.vat>0)L.push("VAT: "+m(s.vat));if(s.del>0)L.push("Delivery: "+m(s.del))}
  if(F.disc)L.push("Discount: "+(s.disc>0?"-"+m(s.disc)+(s.sub>0?" ("+Math.round(s.disc/s.sub*1000)/10+"%)":""):"None"));
  L.push("Total: <b>"+m(s.total)+"</b>");
  if(F.prev&&s.prev>0)L.push("Previous due: "+m(s.prev),"Grand total: <b>"+m(s.gt)+"</b>");
  if(F.pay){const pm=PM.map((n,i)=>pay[i]>0?n+" "+m(pay[i]):"").filter(Boolean).join(" · ");L.push("Paid: "+m(s.paid)+(pm?" ("+pm+")":""))}
- L.push(s.due>0.005?"⚠️ <b>DUE: "+m(s.due)+"</b>":"✅ Paid in full");
+ L.push(s.due>0.005?"<b>DUE: "+m(s.due)+"</b>":"Paid in full");
  if(F.note&&s.note)L.push("","Note: "+esc(s.note));
  return L.join("\n").slice(0,4000)}
-function tgMsgDue(x,rem,F){F=F||D.tg.f;const L=["💰 <b>DUE COLLECTION · "+(x.w?"WHOLESALE":"RETAIL")+"</b>"];
+function tgMsgDue(x,rem,F){F=F||D.tg.f;const L=["<b>DUE COLLECTION · "+(x.w?"WHOLESALE":"RETAIL")+"</b>"];
  if(F.date)L.push("Date: "+dfm(x.d));L.push("Customer: "+esc(x.cn||"")+(x.ci?" (ID: <b>"+esc(x.ci)+"</b>)":""));
  L.push("Received: <b>"+m(x.amt)+"</b>");
  if(F.pay){const pm=PM.map((n,i)=>x.pay[i]>0?n+" "+m(x.pay[i]):"").filter(Boolean).join(" · ");if(pm)L.push("Method: "+pm)}
- L.push(rem>0.005?"⚠️ <b>Remaining due: "+m(rem)+"</b>":"✅ Due cleared");
+ L.push(rem>0.005?"<b>Remaining due: "+m(rem)+"</b>":"Due cleared");
  if(F.note&&x.note)L.push("","Note: "+esc(x.note));return L.join("\n")}
 function tgEnqueue(text){const ids=D.tg.chat.split(/[,\s]+/).filter(Boolean);ids.forEach(c=>D.tg.q.push({c,t:text,ts:Date.now()}));if(D.tg.q.length>100)D.tg.q.splice(0,D.tg.q.length-100);save();
  tgFlush().then(()=>{if(D.tg.err&&D.tg.q.length)toast("Telegram: "+D.tg.err)})}
@@ -618,13 +632,13 @@ function saveTG(){const on=$("tg_on").checked,tok=$("tg_tok").value.trim(),chat=
  if(on||tok||chat){const v=tgVal();if(!v)return}
  const t=D.tg;t.on=on;t.token=tok;t.chat=chat;t.for=$("tg_for").value;t.due=$("tg_due").checked;t.f=tgForm();if(!on)t.q=[];save();tgStatus();toast("Telegram settings saved");if(on)tgFlush()}
 async function tgTest(){const v=tgVal();if(!v)return;const ids=v.chat.split(/[,\s]+/).filter(Boolean);toast("Sending test message...");
- try{for(const c of ids){const j=await tgPost(v.tok,c,"✅ <b>Test message</b>\n"+esc(D.c.shop||"Dealexcart")+" POS is connected to Telegram.");if(!j.ok)return toast("Telegram: "+(j.description||"Failed to send"))}toast("Test message sent")}catch(e){toast("Could not reach Telegram. Check your internet connection.")}}
+ try{for(const c of ids){const j=await tgPost(v.tok,c,"<b>Test message</b>\n"+esc(D.c.shop||"Dealexcart")+" POS is connected to Telegram.");if(!j.ok)return toast("Telegram: "+(j.description||"Failed to send"))}toast("Test message sent")}catch(e){toast("Could not reach Telegram. Check your internet connection.")}}
 setInterval(()=>{if(D.tg.q.length)tgFlush()},60000);addEventListener("online",()=>tgFlush());
 
 /* Settings */
-const sf={shop:"s_shop",addr:"s_addr",web:"s_web",phone:"s_phone",email:"s_email",tax:"s_tax",vat:"s_vat",maxd:"s_maxd",cur:"s_cur",paper:"s_paper",foot:"s_foot"};
+const sf={shop:"s_shop",addr:"s_addr",web:"s_web",phone:"s_phone",email:"s_email",tax:"s_tax",vat:"s_vat",cur:"s_cur",paper:"s_paper",foot:"s_foot"};
 function rSet(){for(const k in sf)$(sf[k]).value=D.c[k];tgLoad()}
-function saveSet(){for(const k in sf)D.c[k]=$(sf[k]).value;D.c.vat=Math.min(100,Math.max(0,parseFloat(D.c.vat)||0));D.c.maxd=isNaN(parseFloat(D.c.maxd))?30:Math.min(100,Math.max(0,parseFloat(D.c.maxd)));D.c.cur=D.c.cur||"৳";save();head();toast("Settings saved")}
+function saveSet(){for(const k in sf)D.c[k]=$(sf[k]).value;D.c.vat=Math.min(100,Math.max(0,parseFloat(D.c.vat)||0));D.c.cur=D.c.cur||"৳";save();head();toast("Settings saved")}
 function restore(){try{const r=JSON.parse($("bk").value);if(!r.p||!r.s)throw 0;D={...D,...r,c:{...D.c,...r.c},tg:{...D.tg,...(r.tg||{}),f:{...D.tg.f,...((r.tg||{}).f||{})},token:D.tg.token,q:[]}};save();rSet();rPos();toast("Restore complete")}catch(e){toast("Invalid backup data")}}
 rPos();$("q").focus();
 </script>
