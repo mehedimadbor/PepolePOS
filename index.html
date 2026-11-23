@@ -140,10 +140,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 <!-- POS -->
 <div class="pg on" id="t_pos"><div class="card">
-<label style="margin-top:0">Search customer (Name / Phone / ID)</label><div class="sw"><input id="cs" autocomplete="off" placeholder="Search saved customers..." oninput="csug()" onblur="setTimeout(()=>$('csg').style.display='none',200)" onkeydown="if(event.key==='Enter'){const r=csearch(this.value)[0];if(r)cpick(r.id)}"><div id="csg"></div></div>
+<label style="margin-top:0">Search customer (Name / Phone / ID)</label><div class="sw"><input id="cs" autocomplete="off" placeholder="Search saved customers..." oninput="csug()" onblur="setTimeout(()=>$('csg').style.display='none',350)" onkeydown="if(event.key==='Enter'){const r=csearch(this.value)[0];if(r)cpick(r.id)}"><div id="csg" onmousedown="event.preventDefault()" ontouchstart="event.stopPropagation()"></div></div>
 <div class="row"><div><label>Name</label><input id="cn" placeholder="Walk-in Customer" oninput="cinfo()"></div><div><label>Phone</label><input id="cp" type="tel" onchange="fillC()"></div><div style="flex:2"><label>Address</label><textarea id="ca" rows="2" placeholder="Delivery address"></textarea></div></div>
 <div class="cb" id="cb"></div>
-<div class="bar"><div class="pw"><label>Product</label><div class="sw"><div class="ig"><span><svg viewBox="0 0 24 24"><path d="M4 5v14M7 5v14M11 5v14M14 5v14M18 5v14M21 5v14"/></svg></span><input id="q" autocomplete="off" placeholder="Scan Barcode Or Search Product" oninput="sug()" onkeydown="qEnter(event)"></div><div id="sg"></div></div></div>
+<div class="bar"><div class="pw"><label>Product</label><div class="sw"><div class="ig"><span><svg viewBox="0 0 24 24"><path d="M4 5v14M7 5v14M11 5v14M14 5v14M18 5v14M21 5v14"/></svg></span><input id="q" autocomplete="off" placeholder="Scan Barcode Or Search Product" oninput="sug()" onkeydown="qEnter(event)"></div><div id="sg" onmousedown="event.preventDefault()" ontouchstart="event.stopPropagation()"></div></div></div>
 <div class="qb"><label>Qty</label><input id="aq" type="number" min="1" value="1" onkeydown="if(event.key==='Enter')qAdd()"></div><button class="gr" onclick="qAdd()">Add Item</button></div>
 <div class="wrap"><table class="pt"><thead><tr><th>#SI.</th><th>Item</th><th>Stock</th><th>Price</th><th>Qty</th><th>Total</th><th>Action</th></tr></thead><tbody id="cl"></tbody>
 <tfoot>
@@ -312,7 +312,7 @@ function head(){const s=D.c.shop||"Dealexcart";$("av").textContent=s[0].toUpperC
 let sel=null;const pp=p=>mode==="W"&&p.tp>0?p.tp:(p.ot&&p.spp>0?p.spp:p.p);
 const f=n=>R2(n).toFixed(2);
 function find(q){q=q.trim().toLowerCase();return q?D.p.filter(p=>p.act!==false&&(p.n+" "+p.b+" "+p.c).toLowerCase().includes(q)):[]}
-function sug(){sel=null;const r=find($("q").value).slice(0,8);$("sg").innerHTML=r.map(p=>`<div onclick="pick('${p.id}')"><span>${esc(p.n)} <small>${esc(p.b)}</small></span><b>${m(pp(p))} <small>· stock ${p.st}</small></b></div>`).join("");$("sg").style.display=r.length?"block":"none"}
+function sug(){sel=null;const r=find($("q").value).slice(0,8);$("sg").innerHTML=r.map(p=>`<div data-id="${esc(p.id)}" onclick="pick(this.dataset.id)"><span>${esc(p.n)} <small>${esc(p.b)}</small></span><b>${m(pp(p))} <small>· stock ${p.st}</small></b></div>`).join("");$("sg").style.display=r.length?"block":"none"}
 function pick(id){const p=D.p.find(x=>x.id===id);sel=id;$("q").value=p.n;$("sg").style.display="none";$("aq").focus();$("aq").select()}
 function qEnter(e){if(e.key==="Enter")qAdd()}
 function qAdd(){const q=$("q").value.trim();if(!q)return;const p=D.p.find(x=>x.id===sel)||D.p.find(x=>x.b&&x.b===q&&x.act!==false)||find(q)[0];if(!p)return toast("Product not found");add(p.id,Math.max(1,parseInt($("aq").value)||1))}
@@ -451,7 +451,7 @@ const pn=s=>{let d=nd(s).replace(/\D/g,"");if(d.startsWith("880"))d=d.slice(3);r
 function cmatch(q,n,p,id){q=nd(q).trim().toLowerCase();if(!q)return false;const t=(String(n??"")+String(id??"")).toLowerCase().replace(/[\s-]/g,""),k=q.replace(/[\s-]/g,"");if(t.includes(k)||String(p??"").replace(/[\s-]/g,"").includes(k))return true;if(/^[\d\s+\-()]+$/.test(q)){const a=pn(q);return !!a&&pn(p).includes(a)}return false}
 const sameP=(a,b)=>{const x=pn(a);return !!x&&x===pn(b)};
 function csearch(q){return D.cu.filter(c=>cmatch(q,c.n,c.p,c.id))}
-function csug(){const r=csearch($("cs").value).slice(0,8);$("csg").innerHTML=r.map(c=>`<div onclick="cpick('${c.id}')"><span>${esc(c.n)} <small>${esc(c.p)}</small></span><b>${esc(c.id)}</b></div>`).join("");$("csg").style.display=r.length?"block":"none"}
+function csug(){const r=csearch($("cs").value).slice(0,8);$("csg").innerHTML=r.map(c=>`<div data-id="${esc(c.id)}" onclick="cpick(this.dataset.id)"><span>${esc(c.n)} <small>${esc(c.p)}</small></span><b>${esc(c.id)}</b></div>`).join("");$("csg").style.display=r.length?"block":"none"}
 function cpick(id){const c=D.cu.find(x=>x.id===id);if(!c)return;$("cn").value=c.n;$("cp").value=c.p;$("ca").value=c.a;$("cs").value="";$("csg").style.display="none";cinfo();calc();const v=prevDue();if(v>0)toast("Previous due: "+m(v))}
 function cinfo(){const n=$("cn").value.trim(),p=$("cp").value.trim(),c=D.cu.find(x=>p&&pn(x.p)===pn(p));$("cb").innerHTML=!n?"<b>Walk-in Customer</b> (leave the name empty for a walk-in bill)":c?`Customer ID: <b>${esc(c.id)}</b> · saved customer <button class="s" style="padding:2px 12px;margin-left:8px" onclick="viewC('${c.id}')">View</button>`:p?`<b>New customer</b> · ID after saving: <b>${esc(cid(n,p))}</b>`:"Enter a phone number to save this customer"}
 function cuprev(){const n=$("cun").value.trim(),p=$("cup").value.trim(),o=$("cuid").value;$("cprev").innerHTML=o?`Customer ID: <b>${esc(o)}</b>`:n&&p?`Customer ID: <b>${esc(cid(n,p))}</b>`:"ID = first 3 letters of name + last 4 digits of phone"}
