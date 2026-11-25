@@ -135,6 +135,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <button class="mi" id="b_prod" onclick="tab('prod')"><svg viewBox="0 0 24 24"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg><span>Products</span></button>
 <button class="mi" id="b_cust" onclick="tab('cust')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14a6.5 6.5 0 0 1 3.5 6"/></svg><span>Customers</span></button>
 <button class="mi" id="b_sales" onclick="tab('sales')"><svg viewBox="0 0 24 24"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg><span>Sales &amp; Invoices</span></button>
+<button class="mi" id="b_ret" onclick="tab('ret')"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg><span>Returns</span></button>
 <button class="mi" id="b_set" onclick="tab('set')"><svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Settings</span></button></aside>
 <header class="tb"><b id="ttl">Retail POS</b><div class="tr"><button class="s off" id="tgc" onclick="tgToggle()" style="padding:4px 12px" title="Telegram sale notifications"></button><span class="chip" id="hs"></span><span id="hd8"></span><button class="s ic" onclick="theme()" title="Light / Dark theme"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button></div></header>
 
@@ -235,7 +236,20 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <!-- Sales -->
 <div class="pg" id="t_sales">
   <div class="kp" id="kp"></div>
+  <div class="card"><div class="row" style="align-items:flex-end;margin-bottom:10px"><div class="seg" id="slseg" style="flex:2"></div><div style="flex:0 0 160px"><label style="margin-top:0">From date</label><input type="date" id="sld" oninput="rSL()"></div><div style="flex:0 0 160px"><label style="margin-top:0">To date</label><input type="date" id="slto" oninput="rSL()"></div><button class="s" style="flex:0 0 auto" onclick="$('sld').value=$('slto').value=ymd(new Date());rSL()">Today</button></div>
+  <div id="slh" style="color:var(--mu);margin-bottom:8px"></div><div class="wrap" id="slist"></div><div id="slt"></div></div>
   <div class="card"><div class="row" style="align-items:center;margin-bottom:10px"><h2 style="margin:0;flex:2">Sales history</h2><select id="sf" onchange="setPaper(this.value)" style="max-width:180px" title="Print format"><option value="80">Thermal 80mm</option><option value="58">Thermal 58mm</option><option value="A4">A4 Invoice</option></select></div><input id="ss" placeholder="Search by invoice no, name or phone" oninput="rSales()"><div class="wrap" style="margin-top:8px" id="sl"></div></div>
+</div>
+
+<!-- Returns -->
+<div class="pg" id="t_ret">
+  <div class="kp" id="rkp"></div>
+  <div class="card"><h2>New product return</h2>
+    <label style="margin-top:0">Find the invoice (Invoice no / Customer name / Phone / ID)</label>
+    <input id="rq" autocomplete="off" placeholder="e.g. 00012, Rahim, 017..." oninput="rtList()" onkeydown="if(event.key==='Enter')rtFirst()">
+    <div class="wrap" style="margin-top:8px" id="rl"></div></div>
+  <div class="card" id="rf" style="display:none"></div>
+  <div class="card"><h2>Return history</h2><input id="rh" placeholder="Search by return no, invoice no, name or phone" oninput="rtHist()"><div class="wrap" style="margin-top:8px" id="rhs"></div></div>
 </div>
 
 <!-- Dashboard -->
@@ -265,7 +279,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <button style="margin-top:12px" onclick="saveSet()">Save settings</button>
   </div>
     <div class="card" id="tgcard" style="grid-column:1/-1;order:3"><h2>Telegram notifications</h2>
-    <label style="display:flex;gap:8px;align-items:center;margin:0 0 4px;font-size:13px;color:var(--tx)"><input type="checkbox" id="tg_on" style="width:auto"> Send an instant Telegram message for every sale</label>
+    <label style="display:flex;gap:8px;align-items:center;margin:0 0 4px;font-size:13px;color:var(--tx)"><input type="checkbox" id="tg_on" style="width:auto"> Send an instant Telegram message for every sale and return</label>
     <div class="row"><div><label>Bot token</label><input id="tg_tok" type="password" autocomplete="off" placeholder="123456789:AA..."></div><div><label>Admin Chat ID(s)</label><input id="tg_chat" autocomplete="off" placeholder="e.g. 123456789 (separate multiple with commas)"></div></div>
     <div style="color:var(--mu);font-size:12px;margin-top:6px">Create a bot with @BotFather, open the bot and press Start, then enter your numeric Chat ID. For a group, add the bot to the group (group IDs start with a minus sign).</div>
     <div class="row"><div><label>Notify for</label><select id="tg_for"><option value="A">Retail and Wholesale</option><option value="R">Retail only</option><option value="W">Wholesale only</option></select></div>
@@ -295,7 +309,7 @@ function theme(){const d=document.documentElement,c=d.dataset.theme||(matchMedia
 const KEY="dx_pro";
 let D={p:[],s:[],h:[],cu:[],dp:[],n:1,c:{shop:"Dealexcart",addr:"Rampura, Dhaka, Bangladesh",web:"www.dealexcart.com",phone:"",email:"",tax:"",vat:0,foot:"Thank you for shopping with us!",cur:"৳",paper:"80"}};
 try{const r=JSON.parse(localStorage.getItem(KEY)||"null");if(r)D={...D,...r,c:{...D.c,...(r.c||{})}}}catch(e){}
-if(!D.dp)D.dp=[];D.tg={on:false,token:"",chat:"",for:"A",due:false,ok:0,err:"",...D.tg,f:{date:true,cust:true,phone:false,items:false,iprice:true,amt:false,disc:false,pay:true,prev:false,note:true,...(D.tg&&D.tg.f)}};if(!Array.isArray(D.tg.q))D.tg.q=[];(()=>{let mx=D.p.reduce((a,p)=>Math.max(a,p.no||0),0);D.p.forEach(p=>{if(!p.no)p.no=++mx})})();if(!D.c.addr)D.c.addr="Rampura, Dhaka, Bangladesh";if(!D.c.web)D.c.web="www.dealexcart.com";
+if(!D.dp)D.dp=[];rtInit();D.tg={on:false,token:"",chat:"",for:"A",due:false,ok:0,err:"",...D.tg,f:{date:true,cust:true,phone:false,items:false,iprice:true,amt:false,disc:false,pay:true,prev:false,note:true,...(D.tg&&D.tg.f)}};if(!Array.isArray(D.tg.q))D.tg.q=[];(()=>{let mx=D.p.reduce((a,p)=>Math.max(a,p.no||0),0);D.p.forEach(p=>{if(!p.no)p.no=++mx})})();if(!D.c.addr)D.c.addr="Rampura, Dhaka, Bangladesh";if(!D.c.web)D.c.web="www.dealexcart.com";
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){toast("Storage is full. Take a backup and remove some images.")}};
 const m=n=>D.c.cur+(+n||0).toLocaleString("en-US",{maximumFractionDigits:2});
 const nf=n=>String(n).padStart(5,"0");
@@ -304,10 +318,10 @@ let cart=[],mode="R";
 function toast(t){const e=$("ts");e.textContent=t;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display="none",2200)}
 function tab(t){const w=t==="whs",pg=w?"pos":(t==="dueR"||t==="dueW")?"due":t,nm=w?"W":"R";
  if(pg==="pos"&&mode!==nm){if(cart.length&&!confirm("Switching mode will clear the current bill. Continue?"))return;mode=nm;clearCart()}
- head();$("ttl").textContent={dash:"Dashboard",pos:"Retail POS",whs:"Wholesale POS",dueR:"Retail Due Collection",dueW:"Wholesale Due Collection",prod:"Products",cust:"Customers",sales:"Sales & Invoices",set:"Settings"}[t];
- ["dash","pos","prod","cust","due","sales","set"].forEach(x=>$("t_"+x).classList.toggle("on",x===pg));
- ["dash","pos","whs","dueR","dueW","prod","cust","sales","set"].forEach(x=>$("b_"+x).classList.toggle("on",x===t));
- if(t==="dash")rDash();if(pg==="pos"){rPos();$("q").focus()}if(pg==="due"){dueMode=t==="dueW"?"W":"R";dueC=null;$("dq").value="";rDue()}if(t==="prod")showPList();if(t==="cust"){rCust();cuprev()}if(t==="sales")rSales();if(t==="set")rSet()}
+ head();$("ttl").textContent={dash:"Dashboard",pos:"Retail POS",whs:"Wholesale POS",dueR:"Retail Due Collection",dueW:"Wholesale Due Collection",prod:"Products",cust:"Customers",sales:"Sales & Invoices",ret:"Returns",set:"Settings"}[t];
+ ["dash","pos","prod","cust","due","sales","ret","set"].forEach(x=>$("t_"+x).classList.toggle("on",x===pg));
+ ["dash","pos","whs","dueR","dueW","prod","cust","sales","ret","set"].forEach(x=>$("b_"+x).classList.toggle("on",x===t));
+ if(t==="dash")rDash();if(pg==="pos"){rPos();$("q").focus()}if(pg==="due"){dueMode=t==="dueW"?"W":"R";dueC=null;$("dq").value="";rDue()}if(t==="prod")showPList();if(t==="cust"){rCust();cuprev()}if(t==="sales"){rSales();rSL()}if(t==="ret")rRet();if(t==="set")rSet()}
 function head(){const s=D.c.shop||"Dealexcart";$("av").textContent=s[0].toUpperCase();$("hs").textContent=s;$("hd8").textContent=new Date().toLocaleDateString("en-GB",{weekday:"short",day:"2-digit",month:"short",year:"numeric"});["sf","s_paper"].forEach(i=>$(i).value=D.c.paper);$("hl").textContent=s;document.title=s+" POS";tgStatus()}
 
 /* POS */
@@ -480,12 +494,26 @@ function rCust(){const L=$("cq").value.trim()?csearch($("cq").value):D.cu;
 /* Sales */
 function rSales(){const q=$("ss").value.toLowerCase(),td=new Date().toDateString(),T=D.s.filter(s=>new Date(s.d).toDateString()===td);
  const prof=a=>a.reduce((x,s)=>x+s.it.reduce((y,i)=>y+(i.p-(i.c||0))*i.q-(i.c||0)*(i.g||0),0)-s.disc,0);
- $("kp").innerHTML=`<div><small>Sales today</small><b>${T.length}</b></div><div><small>Revenue today</small><b>${m(T.reduce((a,s)=>a+s.total,0))}</b></div><div><small>Profit today</small><b>${m(prof(T))}</b></div><div><small>Total due</small><b>${m(D.s.reduce((a,s)=>a+s.due,0))}</b></div><div><small>Wholesale today</small><b>${m(T.filter(s=>s.w).reduce((a,s)=>a+s.total,0))}</b></div><div><small>Gift given today</small><b>${m(T.reduce((a,s)=>a+gf(s).gv,0))}</b></div><div><small>Products</small><b>${D.p.length}</b></div>`;
+ $("kp").innerHTML=`<div><small>Sales today</small><b>${T.length}</b></div><div><small>Revenue today</small><b>${m(T.reduce((a,s)=>a+s.total,0)-sum(rtP("d").map(r=>r.val)))}</b><i>after returns</i></div><div><small>Profit today</small><b>${m(prof(T)-sum(rtP("d").map(r=>r.pf)))}</b></div><div><small>Returns today</small><b>${m(sum(rtP("d").map(r=>r.val)))}</b><i>${rtP("d").length} return</i></div><div><small>Total due</small><b>${m(D.s.reduce((a,s)=>a+s.due,0))}</b></div><div><small>Wholesale today</small><b>${m(T.filter(s=>s.w).reduce((a,s)=>a+s.total,0))}</b></div><div><small>Gift given today</small><b>${m(T.reduce((a,s)=>a+gf(s).gv,0))}</b></div><div><small>Products</small><b>${D.p.length}</b></div>`;
  const L=D.s.filter(s=>((s.w?"ws-":"inv-")+nf(s.no)+" "+s.cn+" "+s.cp+" "+(s.ci||"")).toLowerCase().includes(q));
- $("sl").innerHTML=L.length?`<table><tr><th>Invoice</th><th>Date</th><th>Type</th><th>Customer</th><th>Phone</th><th class="r">Total</th><th class="r">Due</th><th></th></tr>`+L.map(s=>{const i=D.s.indexOf(s);return`<tr><td>${s.w?"WS":"INV"}-${nf(s.no)}</td><td>${new Date(s.d).toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</td><td>${s.w?"Wholesale":"Retail"}</td><td>${esc(s.cn||"Walk-in Customer")}${s.ci?` <small>(${esc(s.ci)})</small>`:""}</td><td>${esc(s.cp)}</td><td class="r">${m(s.total)}</td><td class="r ${s.due>0.005?"low":""}">${m(s.due)}</td><td><button class="s" onclick="printInv(D.s[${i}])">Reprint</button> <button class="x" onclick="delS(${i})">×</button></td></tr>`}).join("")+"</table>":'<div class="em">No sales found</div>'}
-function delS(i){if(!D.s[i]||!confirm("Deleting this sale will restore its stock. Continue?"))return;const s=D.s.splice(i,1)[0];
+ $("sl").innerHTML=L.length?`<table><tr><th>Invoice</th><th>Date</th><th>Type</th><th>Customer</th><th>Phone</th><th class="r">Total</th><th class="r">Due</th><th></th></tr>`+L.map(s=>{const i=D.s.indexOf(s);return`<tr><td>${s.w?"WS":"INV"}-${nf(s.no)}${rtTag(s)}</td><td>${new Date(s.d).toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</td><td>${s.w?"Wholesale":"Retail"}</td><td>${esc(s.cn||"Walk-in Customer")}${s.ci?` <small>(${esc(s.ci)})</small>`:""}</td><td>${esc(s.cp)}</td><td class="r">${m(s.total)}</td><td class="r ${s.due>0.005?"low":""}">${m(s.due)}</td><td><button class="s" onclick="printInv(D.s[${i}])">Reprint</button> <button class="s" onclick="rtGo(${s.no})">Return</button> <button class="x" onclick="delS(${i})">×</button></td></tr>`}).join("")+"</table>":'<div class="em">No sales found</div>'}
+function delS(i){if(!D.s[i])return;if(rtHas(D.s[i]))return toast("This invoice has returns. Delete its returns first (Returns page).");if(!confirm("Deleting this sale will restore its stock. Continue?"))return;const s=D.s.splice(i,1)[0];
  if(s.clr&&s.clr.length){if(Math.abs((s.due||0)-(s.due0??s.due))<0.005)s.clr.forEach(c=>{const o=D.s.find(x=>x.no===c.no&&!!x.w===c.w);if(o)o.due=R2(o.due+c.due)});else toast("Previous dues were not restored: part of this bill was already collected")}
- s.it.forEach(x=>{const p=D.p.find(y=>(x.b&&y.b===x.b)||y.n===x.n);if(p)p.st+=x.q+(x.g||0)});save();rSales()}
+ s.it.forEach(x=>{const p=D.p.find(y=>(x.b&&y.b===x.b)||y.n===x.n);if(p)p.st+=x.q+(x.g||0)});save();rSales();rSL()}
+
+
+/* ===== Daily sale list (My Retail / My Wholesale) ===== */
+let slm="R";
+function setSL(k){slm=k;rSL()}
+function rSL(){const w=slm==="W";if(!$("sld").value)$("sld").value=ymd(new Date());if(!$("slto").value)$("slto").value=$("sld").value;
+ let a=$("sld").value,b=$("slto").value;if(a>b){const t=a;a=b;b=t}
+ const L=D.s.filter(s=>{const y=ymd(new Date(s.d));return !!s.w===w&&y>=a&&y<=b});
+ $("slseg").innerHTML=`<button class="s${!w?" on":""}" onclick="setSL('R')">My Retail Sale List</button><button class="s${w?" on":""}" onclick="setSL('W')">My Wholesale List</button>`;
+ const fd=v=>new Date(v+"T00:00:00").toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"}),dt=a===b?fd(a):fd(a)+" to "+fd(b);
+ $("slh").innerHTML=`${w?"Wholesale":"Retail"} bills ${a===b?"on":"from"} <b style="color:var(--tx)">${dt}</b>: <b style="color:var(--tx)">${L.length}</b>`;
+ const tot=sum(L.map(s=>s.total)),dis=sum(L.map(s=>s.disc)),gif=sum(L.map(s=>gf(s).gv)),due=sum(L.map(s=>s.due)),sale=R2(sum(L.map(s=>Math.min(s.total,s.paid??(s.total-s.due)))));
+ $("slist").innerHTML=L.length?`<table><tr><th>#</th><th>Invoice</th><th>Date</th><th>Customer</th><th class="r">Total amount</th><th class="r">Discount</th><th class="r">Gift amount</th><th class="r">Due</th><th></th></tr>`+L.map((s,n)=>{const i=D.s.indexOf(s);return`<tr><td>${n+1}</td><td>${s.w?"WS":"INV"}-${nf(s.no)}${rtTag(s)}</td><td>${dfm(s.d)}</td><td>${esc(s.cn||"Walk-in Customer")}${s.ci?` <small>(${esc(s.ci)})</small>`:""}</td><td class="r">${m(s.total)}</td><td class="r">${s.disc>0?m(s.disc):"-"}</td><td class="r">${gf(s).gv>0?m(gf(s).gv):"-"}</td><td class="r ${s.due>0.005?"low":""}">${s.due>0.005?m(s.due):"-"}</td><td><button class="s" onclick="printInv(D.s[${i}])">Print</button> <button class="s" onclick="rtGo(${s.no})">Return</button></td></tr>`}).join("")+`<tr><td colspan="4"><b>Total (${L.length} bill)</b></td><td class="r"><b>${m(tot)}</b></td><td class="r"><b>${m(dis)}</b></td><td class="r"><b>${m(gif)}</b></td><td class="r" style="color:var(--mu)">${m(due)}</td><td></td></tr></table>`:'<div class="em">No '+(w?"wholesale":"retail")+' bills in this date range</div>';
+ $("slt").innerHTML=`<div class="cb" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span>Total sale (due amount not included)</span><b style="font-size:20px">${m(sale)}</b></div>${due>0.005?`<div style="color:var(--mu);font-size:12px;margin-top:6px">Due on these bills: ${m(due)}. Due is shown in the list but is not added to the total sale.</div>`:""}`}
 
 /* ===== Period / payment helpers ===== */
 const PM=["Bank","bKash","Cash","Nagad"],PL=[["d","Today"],["w","This week"],["m","This month"],["y","This year"],["a","All time"]];
@@ -496,7 +524,7 @@ const inP=(t,k)=>t>=pStart(k),sum=a=>a.reduce((x,v)=>x+(+v||0),0),
  dfm=t=>new Date(t).toLocaleString("en-GB",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}),
  segH=(cur,fn)=>PL.map(([k,l])=>`<button class="s${k===cur?" on":""}" onclick="${fn}('${k}')">${l}</button>`).join("");
 function payOf(s){if(s.pay)return s.pay;const a=[0,0,0,0];String(s.m||"").split(",").forEach(x=>{const t=x.trim().match(/^(Bank|bKash|Cash|Nagad)\s+([\d.]+)/i);if(t){const i=PM.findIndex(n=>n.toLowerCase()===t[1].toLowerCase());a[i]+=parseFloat(t[2])||0}});return a}
-const rcv=()=>[...D.s.map(s=>({t:s.d,w:!!s.w,p:payOf(s)})),...D.dp.map(x=>({t:x.d,w:!!x.w,p:x.pay}))];
+const rcv=()=>[...D.s.map(s=>({t:s.d,w:!!s.w,p:payOf(s)})),...D.dp.map(x=>({t:x.d,w:!!x.w,p:x.pay})),...D.rt.map(r=>({t:r.d,w:!!r.w,p:r.pay.map(v=>-v)}))];
 const mtxt=p=>PM.map((n,i)=>p[i]>0?n+" "+p[i]:"").filter(Boolean).join(", ")||"-";
 
 /* ===== Earnings ===== */
@@ -506,7 +534,7 @@ function rEarn(){if(!$("ef").value)$("ef").value=ymd(new Date());if(!$("et").val
  const R=[["d","Today"],["w","This week"],["m","This month"],["y","This year"],["c","Custom ("+$("ef").value+" → "+$("et").value+")"]].map(([k,l])=>{
   const ok=t=>k==="c"?(t>=lo&&t<hi):t>=pStart(k),P=[0,0];rcv().filter(x=>ok(x.t)).forEach(x=>{P[x.w?1:0]+=sum(x.p||[])});
   const du=sum(D.s.filter(s=>ok(s.d)).map(s=>s.due));return`<tr><td>${esc(l)}</td><td class="r">${m(P[0])}</td><td class="r">${m(P[1])}</td><td class="r"><b>${m(P[0]+P[1])}</b></td><td class="r" style="color:var(--mu)">${m(du)}</td></tr>`}).join("");
- $("ern").innerHTML=`<table><tr><th>Period</th><th class="r">Retail earned</th><th class="r">Wholesale earned</th><th class="r">Total earned</th><th class="r">Outstanding due</th></tr>${R}</table><div style="color:var(--mu);font-size:12px;margin-top:8px">Earned = amount paid on bills + due collections, counted on the day received. Outstanding due is excluded.</div>`}
+ $("ern").innerHTML=`<table><tr><th>Period</th><th class="r">Retail earned</th><th class="r">Wholesale earned</th><th class="r">Total earned</th><th class="r">Outstanding due</th></tr>${R}</table><div style="color:var(--mu);font-size:12px;margin-top:8px">Earned = amount paid on bills + due collections − refunds paid on returns, counted on the day it happened. Outstanding due is excluded.</div>`}
 
 /* ===== Dashboard ===== */
 let dk="d";
@@ -518,12 +546,15 @@ function rDash(){rEarn();
  $("dkp").innerHTML=`<div><small>Retail sale</small><b>${m(tt(R))}</b><i>${R.length} bill</i></div>
 <div style="border-top-color:#fb923c"><small>Wholesale sale</small><b>${m(tt(W))}</b><i>${W.length} bill</i></div>
 <div style="border-top-color:#16a34a"><small>Total sale</small><b>${m(tt(S))}</b><i>${S.length} bill</i></div>
+<div style="border-top-color:#f59e0b"><small>Returns</small><b>${m(sum(rtP(dk).map(r=>r.val)))}</b><i>${rtP(dk).length} return</i></div>
+<div style="border-top-color:#16a34a"><small>Net sale (after returns)</small><b>${m(tt(S)-sum(rtP(dk).map(r=>r.val)))}</b></div>
 <div style="border-top-color:#dc2626"><small>Retail due (total)</small><b>${m(dR)}</b><i>${dueList(false).length} customer</i></div>
 <div style="border-top-color:#dc2626"><small>Wholesale due (total)</small><b>${m(dW)}</b><i>${dueList(true).length} customer</i></div>`;
  const P=[[0,0,0,0],[0,0,0,0]];rcv().filter(x=>inP(x.t,dk)).forEach(x=>(x.p||[]).forEach((v,i)=>{P[x.w?1:0][i]+=+v||0}));
- $("dpm").innerHTML=`<table><tr><th>Method</th><th class="r">Retail</th><th class="r">Wholesale</th><th class="r">Total</th></tr>`+PM.map((n,i)=>`<tr><td>${n}</td><td class="r">${m(P[0][i])}</td><td class="r">${m(P[1][i])}</td><td class="r"><b>${m(P[0][i]+P[1][i])}</b></td></tr>`).join("")+`<tr><td><b>Total received</b></td><td class="r"><b>${m(sum(P[0]))}</b></td><td class="r"><b>${m(sum(P[1]))}</b></td><td class="r"><b>${m(sum(P[0])+sum(P[1]))}</b></td></tr></table><div style="color:var(--mu);font-size:12px;margin-top:8px">Includes payments made on bills and due collections.</div>`;
+ $("dpm").innerHTML=`<table><tr><th>Method</th><th class="r">Retail</th><th class="r">Wholesale</th><th class="r">Total</th></tr>`+PM.map((n,i)=>`<tr><td>${n}</td><td class="r">${m(P[0][i])}</td><td class="r">${m(P[1][i])}</td><td class="r"><b>${m(P[0][i]+P[1][i])}</b></td></tr>`).join("")+`<tr><td><b>Total received</b></td><td class="r"><b>${m(sum(P[0]))}</b></td><td class="r"><b>${m(sum(P[1]))}</b></td><td class="r"><b>${m(sum(P[0])+sum(P[1]))}</b></td></tr></table><div style="color:var(--mu);font-size:12px;margin-top:8px">Includes payments made on bills and due collections, minus refunds paid on returns.</div>`;
  const T={};S.forEach(s=>s.it.forEach(x=>{const k=x.b||x.n,o=T[k]||(T[k]={n:x.n,r:0,w:0,a:0});o[s.w?"w":"r"]+=x.q;o.a+=x.p*x.q}));
- const TL=Object.values(T).sort((a,b)=>(b.r+b.w)-(a.r+a.w)).slice(0,10);
+ rtP(dk).forEach(r=>r.it.forEach(x=>{const k=x.b||x.n,o=T[k]||(T[k]={n:x.n,r:0,w:0,a:0});o[r.w?"w":"r"]-=x.q;o.a-=x.p*x.q}));
+ const TL=Object.values(T).filter(x=>x.r+x.w>0).sort((a,b)=>(b.r+b.w)-(a.r+a.w)).slice(0,10);
  $("dtop").innerHTML=TL.length?`<table><tr><th>#</th><th>Product</th><th class="r">Retail qty</th><th class="r">Wholesale qty</th><th class="r">Total qty</th><th class="r">Amount</th></tr>`+TL.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.n)}</td><td class="r">${x.r}</td><td class="r">${x.w}</td><td class="r"><b>${x.r+x.w}</b></td><td class="r">${m(x.a)}</td></tr>`).join("")+"</table>":'<div class="em">No sales in this period</div>';
  const LS=D.p.filter(p=>p.act!==false&&p.st<=p.low).sort((a,b)=>a.st-b.st);
  $("dlow").innerHTML=LS.length?`<table><tr><th>Product</th><th>Category</th><th class="r">Stock</th><th class="r">Alert level</th></tr>`+LS.map(p=>`<tr><td>${esc(p.n)}</td><td>${esc(p.c)}</td><td class="r low">${p.st}${p.st<=0?" (Out)":""}</td><td class="r">${p.low}</td></tr>`).join("")+"</table>":'<div class="em">No low stock products</div>'}
@@ -567,20 +598,112 @@ function closeCV(){$("cv").style.display="none"}
 function setCvp(k){cvp=k;rCV()}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeCV()});
 function rCV(){const c=D.cu.find(x=>x.id===cvId);if(!c)return closeCV();
- const S=D.s.filter(s=>sameP(s.cp,c.p)),DP=D.dp.filter(x=>sameP(x.cp,c.p)),
- paidOf=k=>sum(S.filter(s=>inP(s.d,k)).map(s=>sum(payOf(s))))+sum(DP.filter(x=>inP(x.d,k)).map(x=>x.amt)),
+ const S=D.s.filter(s=>sameP(s.cp,c.p)),DP=D.dp.filter(x=>sameP(x.cp,c.p)),RC=D.rt.filter(r=>sameP(r.cp,c.p)),
+ paidOf=k=>sum(S.filter(s=>inP(s.d,k)).map(s=>sum(payOf(s))))+sum(DP.filter(x=>inP(x.d,k)).map(x=>x.amt))-sum(RC.filter(r=>inP(r.d,k)).map(r=>sum(r.pay))),
  dR=sum(S.filter(s=>!s.w).map(s=>s.due)),dW=sum(S.filter(s=>s.w).map(s=>s.due)),
- SP=S.filter(s=>inP(s.d,cvp)),DPP=DP.filter(x=>inP(x.d,cvp)),Pr={};
+ SP=S.filter(s=>inP(s.d,cvp)),DPP=DP.filter(x=>inP(x.d,cvp)),RP=RC.filter(r=>inP(r.d,cvp)),Pr={};
  SP.forEach(s=>s.it.forEach(x=>{const k=x.b||x.n,o=Pr[k]||(Pr[k]={n:x.n,q:0,a:0,k:0});o.q+=x.q;o.a+=x.p*x.q;o.k++}));
  const PL2=Object.values(Pr).sort((a,b)=>b.q-a.q);
  $("cvb").innerHTML=`<div class="row" style="align-items:center;margin-bottom:10px"><h2 style="margin:0;flex:3;font-size:16px;text-transform:none;color:var(--tx)">${esc(c.n)} <small style="color:var(--mu)">· ID ${esc(c.id)}</small></h2><button class="s" style="flex:0 0 auto" onclick="closeCV()">Close ✕</button></div>
 <div class="cb" style="margin:0 0 12px">Phone: <b>${esc(c.p)}</b>${c.a?" · Address: <b>"+esc(c.a)+"</b>":""}</div>
-<div class="kp"><div><small>Total bills</small><b>${S.length}</b><i>Retail ${S.filter(s=>!s.w).length} · Wholesale ${S.filter(s=>s.w).length}</i></div><div style="border-top-color:#16a34a"><small>Total purchase</small><b>${m(sum(S.map(s=>s.total)))}</b></div><div style="border-top-color:#dc2626"><small>Retail due</small><b>${m(dR)}</b></div><div style="border-top-color:#dc2626"><small>Wholesale due</small><b>${m(dW)}</b></div></div>
+<div class="kp"><div><small>Total bills</small><b>${S.length}</b><i>Retail ${S.filter(s=>!s.w).length} · Wholesale ${S.filter(s=>s.w).length}</i></div><div style="border-top-color:#16a34a"><small>Total purchase</small><b>${m(sum(S.map(s=>s.total)))}</b></div><div style="border-top-color:#dc2626"><small>Retail due</small><b>${m(dR)}</b></div><div style="border-top-color:#dc2626"><small>Wholesale due</small><b>${m(dW)}</b></div><div style="border-top-color:#f59e0b"><small>Returned</small><b>${m(sum(RC.map(r=>r.val)))}</b><i>${RC.length} return</i></div></div>
 <div class="card"><h2>Total spent (purchase)</h2><table><tr><th>Period</th><th class="r">Bills</th><th class="r">Purchase</th><th class="r">Paid</th></tr>${PL.map(([k,l])=>{const X=S.filter(s=>inP(s.d,k));return`<tr><td>${l}</td><td class="r">${X.length}</td><td class="r"><b>${m(sum(X.map(s=>s.total)))}</b></td><td class="r">${m(paidOf(k))}</td></tr>`}).join("")}</table></div>
 <div class="seg" style="margin-bottom:12px">${segH(cvp,"setCvp")}</div>
 <div class="card"><h2>Products purchased</h2><div class="wrap">${PL2.length?`<table><tr><th>#</th><th>Product</th><th class="r">Qty</th><th class="r">Bills</th><th class="r">Amount</th></tr>`+PL2.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.n)}</td><td class="r"><b>${x.q}</b></td><td class="r">${x.k}</td><td class="r">${m(x.a)}</td></tr>`).join("")+"</table>":'<div class="em">No products purchased in this period</div>'}</div></div>
-<div class="card"><h2>Bills (${SP.length})</h2><div class="wrap">${SP.length?`<table><tr><th>Invoice</th><th>Date</th><th>Type</th><th>Items</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Due</th><th></th></tr>`+SP.map(s=>`<tr><td>${s.w?"WS":"INV"}-${nf(s.no)}</td><td>${dfm(s.d)}</td><td>${s.w?"Wholesale":"Retail"}</td><td style="white-space:normal;min-width:190px">${s.it.map(x=>esc(x.n)+" × "+x.q).join("<br>")}</td><td class="r">${m(s.total)}</td><td class="r">${m(s.paid)}</td><td class="r ${s.due>0.005?"low":""}">${m(s.due)}</td><td><button class="s" onclick="printInv(D.s[${D.s.indexOf(s)}])">Reprint</button></td></tr>`).join("")+"</table>":'<div class="em">No bills in this period</div>'}</div></div>
+<div class="card"><h2>Bills (${SP.length})</h2><div class="wrap">${SP.length?`<table><tr><th>Invoice</th><th>Date</th><th>Type</th><th>Items</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Due</th><th></th></tr>`+SP.map(s=>`<tr><td>${s.w?"WS":"INV"}-${nf(s.no)}</td><td>${dfm(s.d)}</td><td>${s.w?"Wholesale":"Retail"}</td><td style="white-space:normal;min-width:190px">${s.it.map(x=>esc(x.n)+" × "+x.q).join("<br>")}</td><td class="r">${m(s.total)}</td><td class="r">${m(s.paid)}</td><td class="r ${s.due>0.005?"low":""}">${m(s.due)}</td><td><button class="s" onclick="printInv(D.s[${D.s.indexOf(s)}])">Reprint</button> <button class="s" onclick="closeCV();rtGo(${s.no})">Return</button></td></tr>`).join("")+"</table>":'<div class="em">No bills in this period</div>'}</div></div>
+${RP.length?`<div class="card"><h2>Returns (${RP.length})</h2><div class="wrap"><table><tr><th>Return</th><th>Date</th><th>Invoice</th><th>Items</th><th class="r">Value</th><th class="r">Refunded</th></tr>${RP.map(r=>`<tr><td>RET-${nf(r.no)}</td><td>${dfm(r.d)}</td><td>${r.w?"WS":"INV"}-${nf(r.sn)}</td><td style="white-space:normal;min-width:190px">${r.it.map(x=>esc(x.n)+" × "+x.q).join("<br>")}</td><td class="r"><b>${m(r.val)}</b></td><td class="r">${m(sum(r.pay))}</td></tr>`).join("")}</table></div></div>`:""}
 ${DPP.length?`<div class="card"><h2>Due payments received</h2><div class="wrap"><table><tr><th>Date</th><th>Type</th><th class="r">Amount</th><th>Method</th></tr>${DPP.map(x=>`<tr><td>${dfm(x.d)}</td><td>${x.w?"Wholesale":"Retail"}</td><td class="r"><b>${m(x.amt)}</b></td><td>${mtxt(x.pay)}</td></tr>`).join("")}</table></div></div>`:""}`}
+
+/* ===== Returns ===== */
+const RTR=["Defective / damaged","Wrong item delivered","Customer changed mind","Size / fit issue","Other"];
+let rtS=null;
+function rtInit(){if(!Array.isArray(D.rt))D.rt=[];D.rn=Math.max(+D.rn||0,...D.rt.map(r=>+r.no||0))}
+const rtP=k=>D.rt.filter(r=>inP(r.d,k)),
+ rtHas=s=>D.rt.some(r=>r.sn===s.no&&!!r.w===!!s.w),
+ rtTag=s=>rtHas(s)?' <span class="tg" style="background:#dc262622;color:var(--dg)">Returned</span>':"",
+ rtK=s=>s.sub>0?Math.max(0,(s.total-(s.del||0))/s.sub):1,
+ rtLeft=s=>{const o={};D.rt.forEach(r=>{if(r.sn===s.no&&!!r.w===!!s.w)r.it.forEach(x=>{o[x.i]=(o[x.i]||0)+x.q})});return s.it.map((x,i)=>Math.max(0,x.q-(o[i]||0)))},
+ rtDueB=s=>[s].concat(D.s.filter(x=>x!==s&&s.cp&&!!x.w===!!s.w&&sameP(x.cp,s.cp)).sort((a,b)=>a.d-b.d)).filter(x=>x.due>0.005);
+function rtMatch(s,q){q=q.trim();if(!q)return true;return((s.w?"WS-":"INV-")+nf(s.no)).toLowerCase().includes(q.toLowerCase())||cmatch(q,s.cn,s.cp,s.ci)}
+function rtGo(no){tab("ret");rtPick(no)}
+function rRet(){head();
+ const T=rtP("d"),M=rtP("m");
+ $("rkp").innerHTML=`<div style="border-top-color:#f59e0b"><small>Returns today</small><b>${m(sum(T.map(r=>r.val)))}</b><i>${T.length} return</i></div><div style="border-top-color:#f59e0b"><small>Returns this month</small><b>${m(sum(M.map(r=>r.val)))}</b><i>${M.length} return</i></div><div style="border-top-color:#dc2626"><small>Refunded this month</small><b>${m(sum(M.map(r=>sum(r.pay))))}</b><i>Bank / bKash / Cash / Nagad</i></div><div style="border-top-color:#16a34a"><small>Adjusted against due (month)</small><b>${m(sum(M.map(r=>r.cr)))}</b></div>`;
+ rtList();rtForm();rtHist()}
+function rtList(){const q=$("rq").value,A=D.s.filter(s=>rtMatch(s,q)),L=A.slice(0,12);
+ $("rl").innerHTML=L.length?`<table><tr><th>Invoice</th><th>Date</th><th>Type</th><th>Customer</th><th>Phone</th><th class="r">Total</th><th></th></tr>`+L.map(s=>{const left=sum(rtLeft(s));return`<tr><td>${s.w?"WS":"INV"}-${nf(s.no)}${rtTag(s)}</td><td>${dfm(s.d)}</td><td>${s.w?"Wholesale":"Retail"}</td><td>${esc(s.cn||"Walk-in Customer")}${s.ci?` <small>(${esc(s.ci)})</small>`:""}</td><td>${esc(s.cp)}</td><td class="r">${m(s.total)}</td><td>${left>0?`<button onclick="rtPick(${s.no})">Select</button>`:'<small style="color:var(--mu)">Fully returned</small>'}</td></tr>`}).join("")+"</table>"+(A.length>12?`<div class="cb">Showing the latest 12 of ${A.length} invoices. Type more to narrow down.</div>`:""):'<div class="em">No invoice found</div>'}
+function rtFirst(){const s=D.s.find(x=>rtMatch(x,$("rq").value)&&sum(rtLeft(x))>0);if(s)rtPick(s.no)}
+function rtPick(no){const s=D.s.find(x=>x.no===no);if(!s)return;if(sum(rtLeft(s))<=0)return toast("All items of this invoice are already returned");rtS=no;rtForm();$("rf").scrollIntoView({block:"start",behavior:"smooth"})}
+function rtCancel(){rtS=null;rtForm()}
+function rtForm(){const box=$("rf"),s=D.s.find(x=>x.no===rtS);
+ if(!s){rtS=null;box.style.display="none";box.innerHTML="";return}
+ const left=rtLeft(s),inv=(s.w?"WS-":"INV-")+nf(s.no),dueOn=sum(rtDueB(s).map(x=>x.due))>0.005;
+ box.style.display="block";
+ box.innerHTML=`<div class="row" style="align-items:center;margin-bottom:10px"><h2 style="margin:0;flex:3">Return from ${inv} · ${esc(s.cn||"Walk-in Customer")}${s.cp?" · "+esc(s.cp):""}</h2><button class="s" style="flex:0 0 auto" onclick="rtCancel()">Cancel ✕</button></div>
+<div class="wrap"><table class="pt"><thead><tr><th>#</th><th>Item</th><th class="r">Sold price</th><th class="r">Sold qty</th><th class="r">Already returned</th><th>Return qty</th><th class="r">Refund value</th></tr></thead><tbody>${s.it.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.n)}${x.b?`<br><small style="color:var(--mu)">${esc(x.b)}</small>`:""}</td><td class="r">${m(x.p)}</td><td class="r">${x.q}</td><td class="r">${x.q-left[i]}</td><td>${left[i]>0?`<input class="q rqi" data-i="${i}" type="number" min="0" max="${left[i]}" value="0" oninput="rtCalc()"> <button class="s" style="padding:3px 9px" onclick="rtAll(${i})">All (${left[i]})</button>`:'<small style="color:var(--mu)">Fully returned</small>'}</td><td class="r" id="rv${i}">${m(0)}</td></tr>`).join("")}</tbody></table></div>
+<div style="color:var(--mu);font-size:12px;margin:6px 0 0">Refund value = item price × qty, with this bill's discount and VAT shared proportionally. Delivery charge and gift items are not refunded.</div>
+<div class="row"><div><label>Reason</label><select id="rr">${RTR.map(x=>`<option>${x}</option>`).join("")}</select></div><div style="flex:2"><label>Note</label><input id="rn" placeholder="Optional"></div></div>
+<label style="display:flex;gap:8px;align-items:center;margin:12px 0 0;font-size:13px;color:var(--tx);font-weight:500"><input type="checkbox" id="rs" checked style="width:auto"> Add returned items back to stock (untick for damaged items)</label>
+${dueOn?`<label style="display:flex;gap:8px;align-items:center;margin:8px 0 0;font-size:13px;color:var(--tx);font-weight:500"><input type="checkbox" id="ra" checked style="width:auto" onchange="rtCalc()"> Adjust against this customer's due first <span id="rth" style="color:var(--mu);font-weight:400"></span></label>`:""}
+<div class="pay" style="margin-top:14px;border-top:1px solid var(--bd)"><div class="pl"><b>Refund payment:</b> <button class="s" style="padding:3px 9px;margin-left:8px" onclick="rtFull()">Full refund (Cash)</button>
+<div class="row"><div><label>Bank</label><input id="rp1" type="number" min="0" oninput="rtCalc()"></div><div><label>bKash</label><input id="rp2" type="number" min="0" oninput="rtCalc()"></div><div><label>Cash</label><input id="rp3" type="number" min="0" oninput="rtCalc()"></div><div><label>Nagad</label><input id="rp4" type="number" min="0" oninput="rtCalc()"></div></div></div>
+<div class="pr2"><div><b>Return Value</b><input id="rtv" readonly></div><div><span>Adjusted against due</span><input id="rtc" readonly></div><div><span>Refund to pay</span><input id="rtp" readonly></div><div><span>Refund entered</span><input id="rte" readonly></div></div></div>
+<div class="fr"><button class="s" onclick="rtSave(0)">Save return</button><button class="gr" onclick="rtSave(1)">Save &amp; Print</button></div>`;
+ rtCalc()}
+function rtAll(i){const e=document.querySelector('#rf input.rqi[data-i="'+i+'"]');if(e){e.value=e.max;rtCalc()}}
+function rtQty(){const o={};document.querySelectorAll("#rf input.rqi").forEach(e=>{const mx=+e.max;let v=Math.floor(+e.value||0);v=Math.max(0,Math.min(mx,v));if(e.value!==""&&+e.value!==v)e.value=v;o[+e.dataset.i]=v});return o}
+function rtCalc(){const s=D.s.find(x=>x.no===rtS);if(!s)return;const Q=rtQty(),k=rtK(s);
+ const ln=s.it.map((x,i)=>{const v=R2(x.p*(Q[i]||0)*k),e=$("rv"+i);if(e)e.textContent=m(v);return v}),
+  val=R2(sum(ln)),av=sum(rtDueB(s).map(x=>x.due)),ad=$("ra"),cr=ad&&ad.checked?R2(Math.min(val,av)):0,cash=R2(val-cr),
+  ent=R2(sum([1,2,3,4].map(i=>Math.max(0,parseFloat($("rp"+i).value)||0))));
+ $("rtv").value=f(val);$("rtc").value=f(cr);$("rtp").value=f(cash);$("rte").value=f(ent);
+ const h=$("rth");if(h)h.textContent="(due available: "+m(av)+")";
+ return{Q,val,cr,cash,ent}}
+function rtFull(){const c=rtCalc();if(!c)return;const o=[1,2,4].reduce((a,i)=>a+Math.max(0,parseFloat($("rp"+i).value)||0),0);$("rp3").value=f(Math.max(0,c.cash-o));rtCalc()}
+function rtSave(pr){const s=D.s.find(x=>x.no===rtS);if(!s)return;const c=rtCalc(),it=[];
+ s.it.forEach((x,i)=>{const q=c.Q[i]||0;if(q>0)it.push({i,n:x.n,b:x.b,p:x.p,c:x.c,q})});
+ if(!it.length)return toast("Enter the return quantity for at least one item");
+ if(c.cash>0.005&&Math.abs(c.ent-c.cash)>0.005)return toast(c.ent>c.cash?"Refund entered is more than the refund to pay ("+m(c.cash)+")":"Enter how the refund of "+m(c.cash)+" is paid");
+ if(c.cash<=0.005&&c.ent>0.005)return toast("No refund payment is needed. Clear the refund fields");
+ const pay=[1,2,3,4].map(i=>R2(Math.max(0,parseFloat($("rp"+i).value)||0)));
+ let r=c.cr;const adj=[];
+ if(r>0.004)rtDueB(s).forEach(x=>{if(r<=0.004)return;const a=R2(Math.min(x.due,r));x.due=R2(x.due-a);if(x.due<0.005)x.due=0;r=R2(r-a);adj.push({no:x.no,a})});
+ const gp=sum(it.map(x=>x.p*x.q)),pf=R2(sum(it.map(x=>(x.p-(x.c||0))*x.q))-(s.sub>0?(s.disc||0)*gp/s.sub:0)),
+  rec={id:"rt"+Date.now(),no:++D.rn,d:Date.now(),sn:s.no,w:!!s.w,cn:s.cn,ci:s.ci||"",cp:s.cp,ca:s.ca||"",it,val:c.val,cr:c.cr,adj,pay,pf,reason:$("rr").value,note:$("rn").value.trim(),rs:$("rs").checked};
+ if(rec.rs)it.forEach(x=>{const p=D.p.find(y=>(x.b&&y.b===x.b)||y.n===x.n);if(p)p.st+=x.q});
+ D.rt.unshift(rec);save();tgNotifyRet(rec);rtS=null;$("rq").value="";rRet();toast("Return saved · "+m(rec.val));if(pr)printRet(rec)}
+function delRet(id){const r=D.rt.find(x=>x.id===id);if(!r||!confirm("Delete this return? Stock, due and refund entries will be reversed."))return;
+ if(r.rs)r.it.forEach(x=>{const p=D.p.find(y=>(x.b&&y.b===x.b)||y.n===x.n);if(p)p.st=Math.max(0,p.st-x.q)});
+ (r.adj||[]).forEach(a=>{const o=D.s.find(x=>x.no===a.no);if(o)o.due=R2(o.due+a.a)});
+ D.rt=D.rt.filter(x=>x!==r);save();rRet();toast("Return deleted")}
+function rtHist(){const q=($("rh").value||"").trim().toLowerCase(),L=D.rt.filter(r=>!q||("ret-"+nf(r.no)+" "+(r.w?"ws-":"inv-")+nf(r.sn)).includes(q)||cmatch(q,r.cn,r.cp,r.ci)).slice(0,100);
+ $("rhs").innerHTML=L.length?`<table><tr><th>Return</th><th>Date</th><th>Invoice</th><th>Customer</th><th>Items</th><th class="r">Value</th><th class="r">Due adj.</th><th class="r">Refunded</th><th>Reason</th><th></th></tr>`+L.map(r=>`<tr><td><b>RET-${nf(r.no)}</b></td><td>${dfm(r.d)}</td><td>${r.w?"WS":"INV"}-${nf(r.sn)}</td><td>${esc(r.cn||"Walk-in Customer")}${r.ci?` <small>(${esc(r.ci)})</small>`:""}</td><td style="white-space:normal;min-width:180px">${r.it.map(x=>esc(x.n)+" × "+x.q).join("<br>")}${r.rs?"":'<br><small style="color:var(--dg)">Not restocked</small>'}</td><td class="r"><b>${m(r.val)}</b></td><td class="r">${m(r.cr)}</td><td class="r">${m(sum(r.pay))}<br><small style="color:var(--mu)">${esc(mtxt(r.pay))}</small></td><td style="white-space:normal">${esc(r.reason)}${r.note?"<br><small>"+esc(r.note)+"</small>":""}</td><td><button class="s" onclick="printRet(D.rt[${D.rt.indexOf(r)}])">Print</button> <button class="x" onclick="delRet('${r.id}')">×</button></td></tr>`).join("")+"</table>":'<div class="em">No returns yet</div>'}
+function printRet(r,fmt){if(!r)return;fmt=fmt||D.c.paper;const c=D.c,th=fmt!=="A4",dt=dfm(r.d),no="RET-"+nf(r.no),inv=(r.w?"WS-":"INV-")+nf(r.sn),gross=R2(sum(r.it.map(x=>x.p*x.q))),rf=R2(sum(r.pay)),dj=R2(r.val-gross),
+ kv=(a,b,k)=>`<div class="kv${k?" b":""}"><span>${a}</span><span>${b}</span></div>`;
+ $("inv").className=th?"rc w"+fmt:"";$("pg").textContent=th?`@page{size:${fmt}mm auto;margin:0}`:"@page{size:A4;margin:12mm}";
+ $("inv").innerHTML=th?`<div class="sn">${esc(c.shop)}</div><div class="c">${esc(c.addr)}</div>${c.phone?`<div class="c">Tel: ${esc(c.phone)}</div>`:""}<hr class="dd"><div class="c b big">RETURN SLIP</div>${kv("Return",no)}${kv("Invoice",inv)}${kv("Date",dt)}<hr class="dd">
+<div class="cu">${esc(r.cn||"Walk-in Customer")}</div>${r.ci?`<div>ID: ${esc(r.ci)}</div>`:""}${r.cp?`<div class="cu">${esc(r.cp)}</div>`:""}<hr class="dd">
+${r.it.map(x=>`<div>${esc(x.n)}</div>${kv(x.q+" x "+m(x.p),m(x.p*x.q))}`).join("")}<hr class="dd">
+${Math.abs(dj)>0.004?kv("Items value",m(gross))+kv("Discount / VAT adj.",(dj<0?"-":"+")+m(Math.abs(dj))):""}<div class="kv big"><span>RETURN VALUE</span><span>${m(r.val)}</span></div>${r.cr>0.005?kv("Adjusted against due",m(r.cr)):""}${rf>0.005?kv("Refunded",m(rf))+`<div class="c">${esc(mtxt(r.pay))}</div>`:""}
+<hr class="dd">${r.reason?`<div>Reason: ${esc(r.reason)}</div>`:""}${r.note?`<div>${esc(r.note)}</div>`:""}<div class="c">${esc(c.foot)}</div>`
+:`<div class="ih"><div class="sh"><h1>${esc(c.shop)}</h1>${esc(c.addr)}${c.web?"<br>"+esc(c.web):""}${c.phone?"<br>Phone: "+esc(c.phone):""}${c.email?" · "+esc(c.email):""}${c.tax?"<br>BIN: "+esc(c.tax):""}</div>
+<div class="ib"><div class="tag" style="font-size:20px;letter-spacing:3px">RETURN SLIP</div><table><tr><td>Return No</td><td>${no}</td></tr><tr><td>Invoice</td><td>${inv}</td></tr><tr><td>Date</td><td>${dt}</td></tr></table></div></div>
+<div class="bt"><div class="cd"><div class="bl">CUSTOMER${r.ci?" · ID "+esc(r.ci):""}</div><div class="cnm">${esc(r.cn||"Walk-in Customer")}</div>${r.cp?`<div class="cph">Phone: ${esc(r.cp)}</div>`:""}${r.ca?`<div class="cad">Address: ${esc(r.ca)}</div>`:""}</div></div>
+<table><tr><th>#</th><th>Returned Item</th><th class="r">Price</th><th class="r">Qty</th><th class="r">Amount</th></tr>${r.it.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.n)}${x.b?`<br><small style="color:#64748b">${esc(x.b)}</small>`:""}</td><td class="r">${m(x.p)}</td><td class="r">${x.q}</td><td class="r">${m(x.p*x.q)}</td></tr>`).join("")}</table>
+<div class="sum"><div class="wd"><b>REASON</b>${esc(r.reason||"-")}${r.note?`<br><br><b>NOTE</b>${esc(r.note)}`:""}</div><div class="tt"><div><span>Items value</span><span>${m(gross)}</span></div>${Math.abs(dj)>0.004?`<div><span>Discount / VAT adj.</span><span>${dj<0?"-":"+"}${m(Math.abs(dj))}</span></div>`:""}<div class="g"><span>Return Value</span><span>${m(r.val)}</span></div>${r.cr>0.005?`<div><span>Adjusted against due</span><span>${m(r.cr)}</span></div>`:""}<div><span>Refunded</span><b>${m(rf)}</b></div>${rf>0.005?`<div><span>Method</span><span>${esc(mtxt(r.pay))}</span></div>`:""}</div></div>
+<div class="sg"><div>Customer Signature</div><div>Authorized Signature</div></div><div class="ft">${esc(c.foot)}${c.web?" · "+esc(c.web):""}</div>`;
+ setTimeout(()=>window.print(),50)}
+function tgMsgRet(r){const L=["<b>"+(r.w?"WHOLESALE":"RETAIL")+" RETURN</b>","Return: <b>RET-"+nf(r.no)+"</b> (Invoice "+(r.w?"WS-":"INV-")+nf(r.sn)+")"];
+ if(D.tg.f.date)L.push("Date: "+dfm(r.d));
+ L.push("Customer: "+esc(r.cn||"Walk-in Customer")+(r.ci?" (ID: <b>"+esc(r.ci)+"</b>)":""));
+ L.push("",...r.it.slice(0,40).map((x,i)=>(i+1)+". "+esc(x.n)+" × "+x.q),"");
+ L.push("Return value: <b>"+m(r.val)+"</b>");
+ if(r.cr>0.005)L.push("Adjusted against due: "+m(r.cr));
+ const rf=sum(r.pay);if(rf>0.005)L.push("Refunded: "+m(rf)+" ("+mtxt(r.pay)+")");
+ if(r.reason)L.push("Reason: "+esc(r.reason));
+ if(D.tg.f.note&&r.note)L.push("Note: "+esc(r.note));
+ return L.join("\n").slice(0,4000)}
+function tgNotifyRet(r){if(!tgReady())return;if((D.tg.for==="R"&&r.w)||(D.tg.for==="W"&&!r.w))return;tgEnqueue(tgMsgRet(r))}
 
 /* ===== Telegram notifications ===== */
 const TGF=[["date","Date & time"],["cust","Customer name & ID"],["phone","Customer phone"],["items","Product list"],["iprice","  Show quantity, price & amount per product"],["amt","Subtotal, VAT & delivery"],["disc","Discount"],["pay","Payment methods & paid amount"],["prev","Previous due & grand total"],["note","Note"]];
@@ -639,7 +762,7 @@ setInterval(()=>{if(D.tg.q.length)tgFlush()},60000);addEventListener("online",()
 const sf={shop:"s_shop",addr:"s_addr",web:"s_web",phone:"s_phone",email:"s_email",tax:"s_tax",vat:"s_vat",cur:"s_cur",paper:"s_paper",foot:"s_foot"};
 function rSet(){for(const k in sf)$(sf[k]).value=D.c[k];tgLoad()}
 function saveSet(){for(const k in sf)D.c[k]=$(sf[k]).value;D.c.vat=Math.min(100,Math.max(0,parseFloat(D.c.vat)||0));D.c.cur=D.c.cur||"৳";save();head();toast("Settings saved")}
-function restore(){try{const r=JSON.parse($("bk").value);if(!r.p||!r.s)throw 0;D={...D,...r,c:{...D.c,...r.c},tg:{...D.tg,...(r.tg||{}),f:{...D.tg.f,...((r.tg||{}).f||{})},token:D.tg.token,q:[]}};save();rSet();rPos();toast("Restore complete")}catch(e){toast("Invalid backup data")}}
+function restore(){try{const r=JSON.parse($("bk").value);if(!r.p||!r.s)throw 0;D={...D,...r,c:{...D.c,...r.c},tg:{...D.tg,...(r.tg||{}),f:{...D.tg.f,...((r.tg||{}).f||{})},token:D.tg.token,q:[]}};if(!Array.isArray(r.rt))D.rt=[];rtInit();save();rSet();rPos();toast("Restore complete")}catch(e){toast("Invalid backup data")}}
 rPos();$("q").focus();
 </script>
 </body>
